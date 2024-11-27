@@ -1,0 +1,86 @@
+Problema de base de datos:
+Se encuentran tres objetos a convertir en tablas: Empleado, Departamento y Proyecto.
+
+EMPLEADO:
+ID                 INT           NOT NULL    PRIMARY KEY     AUTO_INCREMENT
+NOMBRE             VARCHAR(90)   NOT NULL
+DIRECCION          VARCHAR(90)   NOT NULL
+CORREO_ELECTRONICO VARCHAR(90)   NOT NULL
+FECHA_CONTRATACION DATE          NOT NULL
+DEPARTAMENTO       INT           NULL        FOREIGN KEY(DEPARTAMENTO.NOMBRE)
+
+
+DEPARTAMENTO:
+NOMBRE             VARCHAR(60)   NOT NULL    PRIMARY KEY
+DESCRIPCION        VARCHAR(255)  NULL
+RESPONSABLE        INT           NULL        FOREIGN KEY(EMPLEADO.ID)
+
+
+PROYECTO:
+NOMBRE             VARCHAR(90)   NOT NULL   PRIMARY KEY
+DESCRIPCION        VARCHAR(255)  NULL
+FECHA_INICIO       DATE          NOT NULL
+FECHA_FIN          DATE          NOT NULL
+DEPARTAMENTO       VARCHAR(60)   NULL       FOREIGN KEY(DEPARTAMENTO.NOMBRE)
+RESPONSABLE        INT           NULL       FOREIGN KEY(EMPLEADO.ID)
+
+
+EMPLEADO_PROYECTO:
+ID_EMPLEADO        INT          NOT NULL    PRIMARY KEY       FOREIGN KEY(EMPLEADO.ID)
+NOMBRE_PROYECTO    VARCHAR(90)  NOT NULL    PRIMARY KEY       FOREIGN KEY(PROYECTO.NOMBRE)
+
+
+RELACIONES:
+
+EMPLEADO <-> DEPARTAMENTO; 1:N; Un EMPLEADO trabaja en un unico DEPARTAMENTO. 
+En un DEPARTAMENTO trabajan muchos empleados. Referencia del DEPARTAMENTO 
+en EMPLEADO.
+
+DEPARTAMENTO <-> EMPLEADO; 1:1; Un EMPLEADO es responsable de un unico 
+DEPARTAMENTO. En un DEPARTAMENTO solo hay un EMPLEADO que es el responsable. 
+Almacenar en el DEPARTAMENTO la referencia del empleado responsable.
+
+DEPARTAMENTO <-> PROYECTO; 0:N; Un DEPARTAMENTO puede desarrollar muchos o 
+ningun proyecto. Un PROYECTO solo puede ser desarrollado por un unico 
+DEPARTAMENTO. Almacenar en el PROYECTO una referencia al DEPARTAMENTO.
+
+EMPLEADO <-> PROYECTO; N:M; Un EMPLEADO puede trabajar en muchos PROYECTOS 
+o en ninguno. En un PROYECTO, pueden trabajar muchos EMPLEADOS o ninguno. 
+Crear tabla intermedia EMPLEADO-PROYECTO donde se almacene una referencia 
+del EMPLEADO y del PROYECTO. 
+
+
+BORRADO:
+EMPLEADO: Al borrar, si un empleado es el responsable de un proyecto, 
+se cambia a NULL.
+
+DEPARTAMENTO: Al borrar, si hay empleados cambiar el departamento a NULL. 
+Si hay proyectos asociados, no se deberia borrar.
+
+PROYECTO: AL borrar, eliminar las tuplas correspondientes al proyecto en 
+EMPLEADO_PROYECTO.
+
+
+
+
+
+ESTRUCTURA PROYECTO
+Se intentara realizar un modelo vista controlador, en los siguientes ficheros:
+- principal.py: Inicializacion del programa y menu principal.
+
+- utilidades.py: Diversas utilidades utilizadas en el resto de ficheros: 
+  pedir campo, validar campo, pedir confirmacion,...
+
+- base_datos.py: Todas las operaciones a realizar sobre la base de datos. Crear
+  base de datos, borrarla. Crear tablas, borrarlas. Insertar, Seleccionar,
+  Modificar y Borrar tuplas sobre tablas. Script inicializador de la base de
+  datos, Resultado de Select a texto.
+
+- empleado.py: Submenu empleado y operaciones con estos: Alta, Baja, Buscar,
+  Modificar y Mostrar Todos.
+
+- departamento.py: Submenu departamento y operaciones con estos: Alta, Baja, Buscar,
+  Modificar y Mostrar Todos.
+
+- proyecto.py: Submenu proyecto y operaciones con estos: Alta, Baja, Buscar,
+  Modificar y Mostrar Todos.
