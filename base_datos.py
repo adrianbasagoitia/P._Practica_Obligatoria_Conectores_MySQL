@@ -295,3 +295,31 @@ def query_crear_base_datos(nombre_base_datos:str):
 
   # Local code
   return (0, "\nQuery para la creacion de la base de datos escrita.", f"CREATE DATABASE {nombre_base_datos.upper()};")
+
+
+# ######################################################################### #
+def query_eliminar_base_datos(nombre_base_datos:str):
+  """
+  Crea una cadena de caracteres con la query necesaria para eliminar una base
+  de datos en el servidor de la base de datos.
+
+  Args:
+      nombre_base_datos (str): 
+        Nombre de la base de datos a eliminar en el servidor de la base de 
+        datos.
+
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - query (str): 
+          Cadena de caracteres conteniendo la query para ejecutar sobre la 
+          conexion al servidor de la base de datos.
+  """
+  # Local variables
+
+  # Local code
+  return (0, "\nQuery para la eliminacion de la base de datos escrita.", f"DROP DATABASE {nombre_base_datos.upper()};")
