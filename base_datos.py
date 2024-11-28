@@ -9,38 +9,6 @@
 
 
 # ################################ Methods ################################ #
-def get_atributos_conexion():
-  """
-  Almacena los parametros para realziar la conexion a la base de datos.
-
-  Usuario, contrasenya, puerto y nombre_base_datos.
-
-  Returns:
-      tuple: 4 posiciones:
-        - usuario (str): 
-          Nombre del usuario para realizar la conexion a la base de datos.
-        - contrasenya(str): 
-          Contrasenya del usuario para realizar la conexion a la base de datos.
-        - puerto (int):
-          Puerto donde esta ejecutando el servidor de la base de datos
-        - nombre_base_datos (str):
-          Nombre de la base de datos a la que conectarse.
-  """  
-  # Local variables
-  usuario:str = "root" # Nombre del usuario para realizar la conexion a la base
-    # de datos
-  contrasenya:str = "Vives2013" # Contrasenya del usuario para realizar la 
-    # conexion a la base de datos.
-  puerto:int = 3306 # Puerto donde esta ejecutando el servidor de la base
-    # de datos
-  nombre_base_datos:str = "GESTIONPROYECTO" # Nombre de la base de datos
-    # a la que conectarse.
-  
-
-  return (usuario, contrasenya, puerto, nombre_base_datos)
-
-
-# ######################################################################### #
 def crear_conexion(usuario:str, contrasenya:str, puerto:int, es_conexion_inicial:bool = False, nombre_base_datos:str = None):
   """
   Crea una conexion al servidor de la base de datos MySQL.
@@ -192,7 +160,7 @@ def comprobar_conexion(conn):
 
 
 # ######################################################################### #
-def ejecutar_instruccion(conn, query:str, ):
+def ejecutar_instruccion(conn, atributos:tuple, query:str):
   """
   Ejecuta una query sobre la base de datos de la conexion.
 
@@ -209,6 +177,9 @@ def ejecutar_instruccion(conn, query:str, ):
   Args:
       conn (Connection): 
         Conexion sobre el servidor de la base de datos.
+
+      atributos (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
 
       query (str): 
         Query a ejecutar. Ej: CREATE DATABASE, SELECT, DELETE, INSERT INTO,...
@@ -229,7 +200,6 @@ def ejecutar_instruccion(conn, query:str, ):
   from pymysql.cursors import Cursor
   
   # Local variables
-  atributos:tuple = None # Atributos para recrear la conexion
   retorno_otros:tuple = None # Tupla que contendra el valor de retorno de 
   # otros metodos.
   num_filas:int = -1 # Numero de filas afectadas por la query.
@@ -248,11 +218,11 @@ def ejecutar_instruccion(conn, query:str, ):
   retorno_otros = comprobar_conexion(conn)
 
   if(retorno_otros[0] == -1): # La conexion no existe
-    # Obtener los atributos de la conexion.
-    atributos = get_atributos_conexion()
-
+    # Iterar mientras que existan intentos restantes y la conexion no haya sido
+    # creada
     while(indice > 0 and not creada):
-      retorno_otros = crear_conexion(atributos[0], atributos[1], atributos[2], atributos[3])
+      # Intentar crear la conexion
+      retorno_otros = crear_conexion(atributos[0], atributos[1], atributos[2], nombre_base_datos = atributos[3])
 
       if(retorno_otros[0] == -1): # Conexion no creada
         indice -= 1
@@ -280,7 +250,7 @@ def ejecutar_instruccion(conn, query:str, ):
         contenido_query = cursor.fetchall()
         mensaje = f"\nQuery ejecutada con exito y contenido almacenado."
       
-    except pymysql.Error as e:
+    except pymysql.Error as e: # Cualquier error en el servidor
       mensaje = f"\nERROR. Error al ejecutar la query {query}: \n{e}"
   
   else: # No se puede establecer una conexion con la base de datos.
