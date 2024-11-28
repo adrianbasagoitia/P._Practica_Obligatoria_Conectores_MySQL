@@ -24,8 +24,6 @@ def crear_conexion(usuario:str, contrasenya:str, puerto:int, es_conexion_inicial
     usuario, contrasenya y puerto, el nombre de la base de datos a la que se 
     debe realizar la conexion.
   
-  
-
   Args:
       usuario (str): 
         Cadena de caracteres conteniendo el usuario que se utilizara para 
@@ -47,7 +45,17 @@ def crear_conexion(usuario:str, contrasenya:str, puerto:int, es_conexion_inicial
         Cadena de caracteres con el nombre de la base de datos a la que 
         realizar la conexion. Solo se debe utilizar este paramtetro con
         conexiones que no sean la primera.
-  """
+
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - conexion (Connection):
+          Conexion con el servidor de la base de datos. Opcional.
+  """ 
   # Import
   import pymysql
   from pymysql import Connection, Error
@@ -100,5 +108,56 @@ def crear_conexion(usuario:str, contrasenya:str, puerto:int, es_conexion_inicial
   
   return retorno
 
+
 # ######################################################################### #
+def comprobar_conexion(conn):
+  """
+  Comprueba la apertura de una conexion al servidor de la base de datos.
+
+  Sobre la conexion recibida como parametro, se intenta crear un cursor,
+  si la creacion es correcta, la conexion continua abierta, y se cierra el
+  cursor. Por el contrario, si el cursor no se crea hay algun problema.
+
+  Args:
+      conn (Connection): 
+        Conexion de la que se quiere comprobar el estado.
+  
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+
+  """
+  # Import
+  import pymysql
+  from pymysql import Connection, Error
+  from pymysql.cursors import Cursor
+
+  # Local variables
+  cursor:Cursor = None # Instancia de cursor, para comprobar que la conexion
+    # esta abierta
+  
+
+  # Local code
+  try: # Intentar crear un cursor sobre la conexion para comprobar que sigue 
+    # abierta
+    cursor = conn.cursor()
+    # Si se llega hasta aqui, la conexion continua abierta
+    mensaje = "\nLa conexion esta abierta."
+    cursor.close() # Cerrar el cursor, para evitar gastar recursos
+
+  except pymysql.Error as e: # La conexion esta cerrada, u otro error.
+    mensaje = "\nERROR. La conexion no esta abierta."
+  
+
+  if("ERROR" in mensaje): # Ejecucion erronea
+    retorno = (-1, mensaje)
+  
+  else: # Ejecucion vorrecta
+    retorno = (0, mensaje)
+
+
 
