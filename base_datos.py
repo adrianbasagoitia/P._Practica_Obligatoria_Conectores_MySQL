@@ -323,3 +323,141 @@ def query_eliminar_base_datos(nombre_base_datos:str):
 
   # Local code
   return (0, "\nQuery para la eliminacion de la base de datos escrita.", f"DROP DATABASE {nombre_base_datos.upper()};")
+
+
+# ######################################################################### #
+def query_crear_tabla(nombre_tabla:str, comprobar_existencia:bool, columnas:list[tuple], primary_key:list[str], foreign_key:list[tuple]):
+  """
+  Genera una query para la creacion de una tabla en la base de datos.
+
+  Args:
+      nombre_tabla (str): 
+        Nombre de la nueva tabla.
+      
+      comprobar_existencia (bool): 
+        Indica si se debe comprobar la existencia (TRUE), es decir, incorporar
+        IF NOT EXISTS, o no incorporar nada.
+      
+      columnas (list[tuple]): 
+        Lista de tuplas conteniendo la informacion de las columnas. Cada tupla 
+        DEBE tener seis posiciones.
+          - nombre columna (str).
+          - tipo de dato (str).
+          - Nullable (bool): Indica si la columna puede ser NULL (True) o NOT
+            NULL (False)
+          - Unique (bool).
+          - AUTO_INCREMENT(bool): Si es una columna con un valor autogenerado 
+            (True) o no.
+          - DEFAULT (str): Si tiene un valor por defecto (Tiene contenido) o no 
+            tiene ningun valor por defecto (None).
+
+      
+      primary_key (list[str]):
+        Lista de cadenas de caracteres con los nombres de las columnas que seran
+        la clave primaria de la tabla. 
+      
+      foreign_key (list[tuple]):
+        Lista de tuplas conteniendo la informacion de las claves foraneas. Cada
+        tupla DEBE tener cinco posiciones.
+          - nombre de la columna de esta tabla (str).
+          - nombre de la tabla referenciada (str).
+          - nombre del campo de la tabla referenciada (str).
+          - ON UPDATE (str). Condicion (CASCADE, SET NULL, NO ACTION) o None.
+          - ON DELETE (str). Condicion (CASCADE, SET NULL, NO ACTION) o None.
+
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - query (str): 
+          Cadena de caracteres conteniendo la query para ejecutar sobre la 
+          conexion al servidor de la base de datos.
+  """
+  # Local variables
+  fk:tuple = None # Almacena una tupla de la lista de foreign_key
+  query:str = "CREATE TABLE " # Query a crear
+
+  # Local code
+  # ##### IF NOT EXISTS #####
+  if(comprobar_existencia):
+    query += "IF NOT EXISTS "
+
+  # ##### Nombre de la tabla #####
+  query += f"{nombre_tabla.upper()} (\n"
+
+  # ##### Columnas #####
+  # Cada columna es una tupla de la lista. La tupla DEBE contener los siguientes
+  # campos:
+  # Nombre columna | Tipo dato | NULLABLE | UNIQUE | AUTO_INCREMENT | DEFAULT
+  for columna in columnas:
+    query += f"\t{columna[0].upper()} " # Nombre de la columna
+    query += f"{columna[1].upper()} " # Tipo de dato
+    
+    # Nullable: Si es NULL o NOT NULL
+    if(columna[2] == False): # NOT NULL: No es NULLABLE
+      query += "NOT NULL "
+
+    else: # NULL: Es NULLABLE
+      query += "NULL "
+    
+    # UNIQUE
+    if(columna[3] == True):
+      query += "UNIQUE "
+    
+    # AUTO_INCREMENT
+    if(columna[4] == True):
+      query += "AUTO_INCREMENT "
+    
+    # DEFAULT
+    if(columna[5] is not None):
+      query += f"DEFAULT {columna[5].upper()} "
+    
+    # Siempre anyadir una coma al final. Despues siempre tiene que venir la 
+    # primary key.
+    query += ",\n"
+  
+
+  # PRIMARY KEY
+  # La lista, tiene que contener todos los nombres de las columnas que seran 
+  # clave primaria.
+  query += "\tPRIMARY KEY(" # Anyadir la cabecera de la clave primaria
+  for i in range(0, len(primary_key)): # Anyadir todos los nombres de las 
+    # columnas que seran clave primaria
+    query += primary_key[i].upper()
+
+    if(i != len(primary_key)-1): # A la ultima no se le pone ,
+      query += ", "
+  
+  query += ")\n" # Cerrar el parentesis y nueva linea. Esta puede ser la ultima
+  # linea de la consulta, no se pone coma.
+
+  # FOREIGN KEY
+  # Cada foreign key es una tupla de la lista. La tupla DEBE contener los 
+  # siguientes campos:
+  # Nombre del campo de esta tabla | nombre tabla referenciada | Campo tabla referenciada | ON UPDATE | ON DELETE.
+  # Por decision de disenyo ON UPDATE y ON DELETE solo aceptan CASCADE, 
+  # SET NULL, NO ACTION
+  for i in range(0, len(foreign_key)):
+    fk = foreign_key[i] # asignar la tupla a la variable
+
+    query += f"\t,FOREIGN KEY ({fk[0].upper()}) REFERENCES {fk[1].upper()}({fk[2].upper()}) "
+
+    # Si hay un ON UPDATE
+    if(fk[3] is not None):
+      query += f"ON UPDATE {fk[3].upper()} "
+
+    # Si hay un ON DELETE
+    if(fk[4] is not None):
+      query += f"ON DELETE {fk[4].upper()} "
+    
+    # Salto de linea
+    query += "\n"
+  
+
+  # Al final de todo cerrar el parentesis y poner el punto y coma
+  query += ");"
+
+  return (0, "Query para generar tabla generada.", query)
