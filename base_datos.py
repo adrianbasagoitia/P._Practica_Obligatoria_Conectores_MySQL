@@ -161,7 +161,6 @@ def comprobar_conexion(conn):
         - mensaje de ejecucion (str): 
           Mensaje para el usuario informando del resultado de la ejecucion 
           del metodo.
-
   """
   # Import
   import pymysql
@@ -192,4 +191,110 @@ def comprobar_conexion(conn):
     retorno = (0, mensaje)
 
 
+# ######################################################################### #
+def ejecutar_instruccion(conn, query:str, ):
+  """
+  Ejecuta una query sobre la base de datos de la conexion.
 
+  Comienza comprobando el estado de la conexion proporcionada como parametro.
+  Si la conexion es valida, no realiza ninguna comprobacion adicional.
+  Posteriormente, crea un cursor, y ejecuta la query sobre el. Si la query
+  devuelve resultado, lo almacena en una variable para su devolucion.
+
+  En otro caso, intenta recrear la conexion utilizando los parametros obtenidos
+  desde get_atributos_conexion un numero maximo de tres veces. Si tras todos 
+  estos intentos, no se tiene una conexion valida. La ejecucion del metodo es
+  erronea.
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      query (str): 
+        Query a ejecutar. Ej: CREATE DATABASE, SELECT, DELETE, INSERT INTO,...
+
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - contenido devuelto por la query (tuple, optional): 
+          Tupla conteniendo las lineas afectadas por la query. Opcional.
+  """
+  # Import
+  import pymysql
+  from pymysql import Connection, Error
+  from pymysql.cursors import Cursor
+  
+  # Local variables
+  atributos:tuple = None # Atributos para recrear la conexion
+  retorno_otros:tuple = None # Tupla que contendra el valor de retorno de 
+  # otros metodos.
+  num_filas:int = -1 # Numero de filas afectadas por la query.
+  contenido_query:tuple = None # Contenido devuelto por la query
+  cursor:Cursor = None # Cursor necesario para ejecutar la query.
+  indice:int = 3 # Numero de intentos para recrear la conexion al servidor de
+    # la base de datos
+  creada:bool = False # La conexion ha sido recreada / Esta activa.
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 2 o 3 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion, contenido devuelto
+  # por la query (opcional).
+
+
+  # Local code
+  retorno_otros = comprobar_conexion(conn)
+
+  if(retorno_otros[0] == -1): # La conexion no existe
+    # Obtener los atributos de la conexion.
+    atributos = get_atributos_conexion()
+
+    while(indice > 0 and not creada):
+      retorno_otros = crear_conexion(atributos[0], atributos[1], atributos[2], atributos[3])
+
+      if(retorno_otros[0] == -1): # Conexion no creada
+        indice -= 1
+      
+      else: # Conexion creada
+        creada = True
+        conn = retorno_otros[2] # Asignar la conexion
+  
+  else: # La conexion esta activa
+    creada = True
+
+
+  if(creada): # Si existe una conexion activa realizar la query
+    try:
+      # Crear el cursor
+      cursor = conn.cursor()
+
+      # Ejecutar la query y obtener el numero de lineas afectadas
+      num_filas = cursor.execute(query)
+
+      if(num_filas == 0): # No hay resultado delvuelto de la query
+        mensaje = f"\nQuery ejecutada con exito."
+      
+      else: # Obtener el resultado de la query
+        contenido_query = cursor.fetchall()
+        mensaje = f"\nQuery ejecutada con exito y contenido almacenado."
+      
+    except pymysql.Error as e:
+      mensaje = f"\nERROR. Error al ejecutar la query {query}: \n{e}"
+  
+  else: # No se puede establecer una conexion con la base de datos.
+    mensaje = "\nERROR. No se puede establecer una conexion con el servidor de la base de datos."
+  
+
+  if("ERROR" in mensaje): # Ejecucion erronea
+    retorno = (-1, mensaje)
+  
+  else: # Ejecucion valida.
+    if(contenido_query is None): # No hay lineas afectadas
+      retorno = (0, mensaje)
+    
+    else: # Hay lineas afectadas
+      retorno = (0, mensaje, contenido_query)
+  
+  return retorno
