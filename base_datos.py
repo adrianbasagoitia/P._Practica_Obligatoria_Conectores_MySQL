@@ -9,6 +9,38 @@
 
 
 # ################################ Methods ################################ #
+def get_atributos_conexion():
+  """
+  Almacena los parametros para realziar la conexion a la base de datos.
+
+  Usuario, contrasenya, puerto y nombre_base_datos.
+
+  Returns:
+      tuple: 4 posiciones:
+        - usuario (str): 
+          Nombre del usuario para realizar la conexion a la base de datos.
+        - contrasenya(str): 
+          Contrasenya del usuario para realizar la conexion a la base de datos.
+        - puerto (int):
+          Puerto donde esta ejecutando el servidor de la base de datos
+        - nombre_base_datos (str):
+          Nombre de la base de datos a la que conectarse.
+  """  
+  # Local variables
+  usuario:str = "root" # Nombre del usuario para realizar la conexion a la base
+    # de datos
+  contrasenya:str = "Vives2013" # Contrasenya del usuario para realizar la 
+    # conexion a la base de datos.
+  puerto:int = 3306 # Puerto donde esta ejecutando el servidor de la base
+    # de datos
+  nombre_base_datos:str = "GESTIONPROYECTO" # Nombre de la base de datos
+    # a la que conectarse.
+  
+
+  return (usuario, contrasenya, puerto, nombre_base_datos)
+
+
+# ######################################################################### #
 def crear_conexion(usuario:str, contrasenya:str, puerto:int, es_conexion_inicial:bool = False, nombre_base_datos:str = None):
   """
   Crea una conexion al servidor de la base de datos MySQL.
