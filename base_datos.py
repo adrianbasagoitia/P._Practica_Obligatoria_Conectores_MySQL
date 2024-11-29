@@ -461,7 +461,7 @@ def query_crear_tabla(nombre_tabla:str, comprobar_existencia:bool, columnas:list
   # Al final de todo cerrar el parentesis y poner el punto y coma
   query += ");"
 
-  return (0, "Query para generar tabla generada.", query)
+  return (0, "Query para generar tabla escrita.", query)
 
 
 # ######################################################################### #
@@ -490,3 +490,52 @@ def query_eliminar_tabla(nombre_tabla:str):
 
   # Local code
   return (0, "\nQuery para la eliminacion de la base de datos escrita.", f"DROP TABLE {nombre_tabla.upper()};")
+
+
+# ######################################################################### #
+def query_insert_into(nombre_tabla:str, nombre_columnas:list[str], filas:list[tuple]):
+  # Local variables
+  query = "INSERT INTO " # Query a crear
+
+  # Local code
+  # ##### Nombre de la tabla #####
+  query += f"{nombre_tabla.upper()} (" # Dejar abierto el parentesis para el 
+    # nombre de las columnas
+
+  # ##### Columnas #####
+  for i in range(0, len(nombre_columnas)): # Iterar sobre la lista de nombres
+    query += nombre_columnas[i].upper() # El nombre de la columna
+
+    if(i != len(nombre_columnas)-1): # Si no es el ultimo nombre, anyadir la 
+      # coma y el espacio
+      query += ", "
+  
+  # Por ultimo cerrar el parentesis, anyadir la palabra VALUES y el salto de 
+  # linea
+  query += ") VALUES \n"
+
+  # ##### Filas #####
+  for i in range(0, len(filas)): # Iterar sobre la lista de tuplas, cada tupla 
+    # es igual a una fila en la tabla
+    
+    # Anyadir tabulacion y abrir parentesis
+    query += "\t("
+
+    # Recorrer la tupla de la fila y anyadir cada uno de los elementos
+    for j in range(0, len(filas[i])): # Por cada elemento en la tupla
+      query += filas[i][j].upper()
+
+      if(j != len(filas[i])-1): # Si no es el ultimo elemento
+        query += ", "
+    
+    # Al final de cada fila cerrar el parentesis
+    query += ")"
+
+    # Si no es la ultima fila anyadir la coma y un salto de linea
+    if(i != len(filas)-1): # Si no es la ultima fila
+      query += ",\n"
+  
+  # Al final de la query anyadir el punto y coma
+  query += ";"
+
+  return (0, "Query para generar insert escrita.", query)
