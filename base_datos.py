@@ -494,6 +494,36 @@ def query_eliminar_tabla(nombre_tabla:str):
 
 # ######################################################################### #
 def query_insert_into(nombre_tabla:str, nombre_columnas:list[str], filas:list[tuple]):
+  """
+  Crea una query para insertar datos en una tabla.
+
+  La insercion se realiza por filas completas. No se realiza ninguna validacion,
+  se asume que antes de la llamada a este metodo han sido anteriormente 
+  validados, y posteriormente seran validados de nuevo en la base de datos.
+
+  Args:
+      nombre_tabla (str): 
+        Nombre de la tabla donde se insertaran las nuevas filas.
+
+      nombre_columnas (list[str]): 
+        Nombre de las columnas de la tabla sobre las que se insertaran datos.
+
+      filas (list[tuple]): 
+        Lista de tuplas conteniendo los datos a insertar en cada fila. El 
+        tamanyo de cada tupla es indeterminado. Cada llamada sera diferente,
+        debe ser del mismo tamanyo de nombre_columnas.
+
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - query (str): 
+          Cadena de caracteres conteniendo la query para ejecutar sobre la 
+          conexion al servidor de la base de datos.
+  """  
   # Local variables
   query = "INSERT INTO " # Query a crear
 
