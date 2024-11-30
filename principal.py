@@ -87,6 +87,55 @@ def comprobar_sistema_operativo():
 
 
 # ######################################################################### #
+def obtener_directorio_trabajo(separador:str):
+  """
+  Obtiene el directorio de trabajo del programa.
+
+  Se obtiene a traves de __file__. Tambien se podria obtener a traves de
+  sys.argv[0].
+
+  Se obtiene el path, se divide por el caracter separador del sistema de
+  ficheros, y se recrea hasta el directorio que contiene el fichero.py
+
+  Returns:
+      tuple: Dos posiciones:
+        - path del directorio (str): Ruta absoluta del directorio que
+          contiene el fichero .py con el caracter separador al final.
+        - mensaje de ejecucion (str): Mensaje para el usuario informando del
+          retorno de la ejecucion del metodo.
+  """
+  # Local variables
+  path:str = None # Ruta absoluta del fichero .py | Ruta al directorio que
+  # contiene el fichero .py
+  path_lista:list[str] # Path dividido por separador
+  retorno:str # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 2 posiciones: path del directorio de trabajo.
+  # Mensaje informativo al usuario de la ejecucion del metodo
+
+
+  # Local code
+  path = __file__ # Obtener el path. En condiciones normales no DEBE lanzar
+  # ninguna excepcion
+
+  path_lista = path.split(separador) # Dividir el path
+
+  path = "" # Limpiar el valor de la variable path
+
+  # Recrear el path hasta el directorio que contiene el fichero .py
+  # Por motivos practicos, se deja el caracter separador en el ultimo 
+  # directorio
+  for i in range(0, len(path_lista)-1):
+    path += path_lista[i]+separador
+
+  # Crear el retorno del metodo, path y mensaje
+  retorno = (0, "\nEl directorio de trabajo queda designado como: "+
+          f"\"{path[0:len(path)-1]}\".", path)
+  
+
+  return retorno
+
+
+# ######################################################################### #
 def comprobar_instalacion_pymyqsl():
   """
   Comprueba si la libreria PyMySQL esta instalada en el sistema.
