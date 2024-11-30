@@ -327,6 +327,35 @@ def query_eliminar_base_datos(nombre_base_datos:str):
 
 
 # ######################################################################### #
+def query_usar_base_datos(nombre_base_datos:str):
+  """
+  Crea una cadena de caracteres con la query necesaria para usar una base
+  de datos en el servidor de la base de datos.
+
+  Args:
+      nombre_base_datos (str): 
+        Nombre de la base de datos a usar en el servidor de la base de 
+        datos.
+
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - query (str): 
+          Cadena de caracteres conteniendo la query para ejecutar sobre la 
+          conexion al servidor de la base de datos.
+  """  
+  # Local variables
+
+
+  # Local code
+  return (0, "\nQuery para el uso de la base de datos escrita.", f"USE {nombre_base_datos.upper()};")
+
+
+# ######################################################################### #
 def query_crear_tabla(nombre_tabla:str, comprobar_existencia:bool, columnas:list[tuple], primary_key:list[str], foreign_key:list[tuple]):
   """
   Genera una query para la creacion de una tabla en la base de datos.
