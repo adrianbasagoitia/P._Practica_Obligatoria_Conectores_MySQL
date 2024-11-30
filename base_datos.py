@@ -751,7 +751,7 @@ def query_delete_from(nombre_tabla:str, where:list[tuple], join:list[tuple] = No
     # Tipo Join (Inner, Left, Right), Nombre Tabla | nombre_campo_tabla |
     # nombre_campo_tabla_join
     for i in range(0, len(join)):
-      query += f"\t{join[i][0].upper()} {join[i][1].upper()}\n\t\tON {nombre_tabla.upper()}.{join[i][2].upper()} = {nombre_tabla.upper()}.{join[i][3].upper()}\n"
+      query += f"\t{join[i][0].upper()} {join[i][1].upper()}\n\t\tON {nombre_tabla.upper()}.{join[i][2].upper()} = {join[i][1].upper()}.{join[i][3].upper()}\n"
       # Por cada join una linea. Tipo de Join nombre_tabla ON 
       # nombre_tabla_original.campo = nombre_tabla.campo
       # Ej INNER JOIN DEPARTAMENTO ON EMPLEADO.DEPARTAMENTO = DEPARTAMENTO.ID
