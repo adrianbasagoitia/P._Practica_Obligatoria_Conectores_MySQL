@@ -772,3 +772,126 @@ def query_delete_from(nombre_tabla:str, where:list[tuple], join:list[tuple] = No
   query += ";"
 
   return (0, "Query para generar delete from escrita", query)
+
+
+# ######################################################################### #
+def query_update(nombre_tabla:str, set:list[tuple], join:list[tuple] = None, where:list[tuple] = None):
+  """
+  Crea una query para modificar filas de una tabla.
+
+  Es un metodo interno al programa, el usuario nunca lo tocara o modificara.
+  Por lo tanto, no se verifica la validez de los parametros introducidos.
+  Se asume que siempre son correctos.
+
+  Args:
+      nombre_tabla (str): 
+        Nombre de la tabla donde se insertaran las nuevas filas.
+
+
+      set (list[tuple]):
+        Lista de tuplas, cada tupla es un set, que se debe anyadir a la
+        consulta. Cada tupla tiene 3 posisicones:
+          - Nombre tabla (str):
+            Nombre de la tabla de la columna a modificar el valor.
+          
+          - Nombre campo (str):
+            Nombre de la columna a modificar el valor.
+          
+          - Valor (str):
+            Nuevo valor de la columna. Si es una
+            cadena de caracteres se deben introducir " o '.
+
+      join (list[tuple], optional):
+        Lista de tuplas, cada tupla es un join, que se debe anyadir a la 
+        consulta. Cada tupla, consta de 4 posiciones:
+          - Tipo de join (str):
+            Tipo  de join a anadir a la consulta.
+
+          - Nombre de la tabla (str):
+            Nombre de la tabla sobre la que hacer el join.
+          
+          - Campo tabla original (str):
+            Campo de la tabla original por el cual hacer el join.
+          
+          - Campo tabla join (str):
+            Campo de la tabla anyadida por el cual hacer el join.
+        Este es un parametro opcional. Su valor por defectos es None.
+
+      where (list[tuple], optional):
+        Lista de tuplas, cada tupla es una condicion que se debe anyadir al
+        where. Cada tupla consta de cuatro posiciones:
+          - Nombre de la tabla (str):
+            Tabla sobre la que se comprobara la condicion.
+
+          - Nombre del campo (str):
+            Nombre del campo sobre el cual aplicar la condicion.
+          
+          - Condicion (str):
+            Condicion a aplicar sobre el campo, solo se acepta <, > o =.
+          
+          - Valor de la condicion (str):
+            Valor a aplicar con la condicion sobre el campo. Si es una
+            cadena de caracteres se deben introducir " o '.
+        Este es un parametro opcional. Su valor por defectos es None.
+    
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - query (str): 
+          Cadena de caracteres conteniendo la query para ejecutar sobre la 
+          conexion al servidor de la base de datos.
+  """  
+  # Local variables
+  query = "UPDATE " # Query a crear
+
+
+  # Local code
+  # ##### Nombre tabla #####
+  query += f"{nombre_tabla.upper()}\n"
+
+  # ##### Join #####
+  if(join is not None): # Si hay que hacer algun Join
+    # Estructura de la tupla de un join
+    # Tipo Join (Inner, Left, Right), Nombre Tabla | nombre_campo_tabla |
+    # nombre_campo_tabla_join
+    for i in range(0, len(join)):
+      query += f"\t{join[i][0].upper()} {join[i][1].upper()}\n\t\tON {nombre_tabla.upper()}.{join[i][2].upper()} = {join[i][1].upper()}.{join[i][3].upper()}\n"
+      # Por cada join una linea. Tipo de Join nombre_tabla ON 
+      # nombre_tabla_original.campo = nombre_tabla.campo
+      # Ej INNER JOIN DEPARTAMENTO ON EMPLEADO.DEPARTAMENTO = DEPARTAMENTO.ID
+  
+
+  # ##### Set #####
+  # Anyadir el set
+  query += "\tSET\n"
+
+  # Estructura de la tupla de un set
+  # Nombre tabla | nombre campo | valor
+  for i in range(0, len(set)): # Incluir todas las condiciones de set
+    # Anyadir el set: Ej: SET EMPLEADO.SALARIO = 3500
+    query += f"\t\t{set[i][0].upper()}.{set[i][1].upper()} = {set[i][2].upper()}"
+    if(i != len(set)-1): # Si no es el ultimo set, anyadir una coma
+      query += ","
+    
+    query += "\n" # Siempre anyadir un salto de linea
+  
+  ##### Where #####
+  query += "\tWHERE\n" # Anyadir el where
+
+  # Estructura de la tupla de un where
+  # nombre_tabla | nombre_campo | condicion (<, >, =) | valor |
+  for i in range(0, len(where)): # Recorrer la lista de condiciones del where
+    # Anyadir el where
+    query += f"\t\t{where[i][0].upper()}.{where[i][1].upper()} {where[i][2].upper()} {where[i][3].upper()}"
+
+    if(i != len(where)-1): # Si no es la ultima clausula, anyadir el AND
+      query += " AND\n"
+  
+  # Al final de la consulta, anyadir el punto y coma
+  query += ";"
+
+  return (0, "Query para generar update escrita", query)
