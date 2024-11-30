@@ -2,6 +2,7 @@
 #                                   IMPORT 
 # ############################################################################ #
 import os
+import base_datos
 
 
 # ############################################################################ #
@@ -11,33 +12,145 @@ import os
 
 # ################################ Methods ################################ #
 def iniciar_programa():
+  """
+  Inicializa el programa.
+
+  En primer lugar comprueba el sistema operativo sobre el que esta ejecutandose
+  el fichero .py, solo se acepta Windows y Linux / UNIX, por decision de 
+  disenyo.
+
+  En segundo lugar, se recupera el directorio de trabajo, que es el directorio
+  que contiene al fichero .py, ademas del separador del sistema de ficheros.
+
+  A continuacion, se intentan obtener los parametros para realziar la conexion
+  a la base de datos. De no encontrarse, o no ser validos, la ejecucion 
+  finaliza.
+
+  Si se encuentran, se comprueba la instalacion de la libreria PyMySQL, de 
+  estar instalad, la ejecucion continua intentando crear una conexion con el
+  servidor de la base de datos.
+
+  De resultar exitosa esta accion, la ejecuion puede tomar dos caminos en 
+  funcion de si la base de datos existe o no. Para comprobar su existencia,
+  se ejecuta la instruccion USE con el nombre de la base de datos.
+
+  - En el caso de existir, se llama al menu principal.
+
+  - En el caso de no existir, se intenta crear utilizando un "script" de creacion. Si esto es exitoso, se muestra el menu. En caso contrario,
+    se finaliza la ejecucion del programa.
+  """
   # Local variables
+  nombre_base_datos = "GESTION_PROYECTOS"
   conector_presente:bool = False # Contiene si la libreria pymysql esta 
   # presente en el sistema.
+  nombre_fichero:str = "cfg.ini" # Nombre del fichero de configuracion
+    # que contiene los parametros para realizar una conexion al servidor
+    # de la base de datos.
+  retorno:tuple = None # Tupla conteniendo el retorno de ejecucion de otros
+    # metodos.
+  separador:str = None # Caracter separador de rutas del sistema de ficheros.
+  directorio_trabajo:str = None # Ruta absoluta donde esta almacenado el fichero
+    # .py; Contiene el separador al final.
+  parametros:tuple = None # Parametros para realizar la conexion con el 
+    # servidor de la base de datos: Usuario, Contrasenya y Puerto.
+  conexion = None # Conexion con el servidor de la base de datos.
+  llamar_menu:bool = False # Almacena si se llama al menu principal o se 
+    # finaliza el programa
 
+  
 
   # Local code
   print("\n"*2+"#"*60)
   print("Inicializando programa...")
 
-  # Comprobar instalacion de pymsql
-  print("Comprobando instalacion del conector PyMySQL...")
-  conector_presente = comprobar_instalacion_pymyqsl()
+  # ##### Comprobar sistema operativo #####
+  print("\nComprobando el sistema operativo...")
+  retorno = comprobar_sistema_operativo() # Comprobar el sistema operativo
 
-  if(conector_presente):
-    print("\nConector PyMySQL presente en el sistema.")
+  print(retorno[1]) # Imprimir el mensaje de retorno
+
+  if(retorno[0] == 0): # Sistema operativo valido
+    separador = retorno[2] # Asignar el separador a la variable
+
+    # ##### Obtener el directorio de trabajo #####
+    print("\nObteniendo el directorio de trabajo...")
+    retorno = obtener_directorio_trabajo(separador) # Obtener el directorio
+      # de trabajo
+    
+    print(retorno[1]) # Imprimir el mensaje de retorno
+
+    if(retorno[0] == 0): # Directorio de trabajo obtenido
+      directorio_trabajo = retorno[2] # Asignar el directorio de trabajo a la
+        # variable
+      
+      # ##### Obtener configuracion de conexion #####
+      print("\nObteniendo parametros de conexion al servidor de la base de datos....")
+      retorno = obtener_parametros_conexion(directorio_trabajo, nombre_fichero)
+
+      print(retorno[1]) # Imprimir el mensaje de retorno
+
+      if(retorno[0] == 0): # Parametros obtenidos
+        parametros = retorno[2] # Asignar parametros a la variable
+
+        # ##### Instalacion de la libreria PyMySQL #####
+        print("Comprobando instalacion del conector PyMySQL...")
+        conector_presente = comprobar_instalacion_pymyqsl()
+
+        if(not conector_presente): # La libreria no esta presente
+          print("El conector PyMySQL no esta presente en el sistema.")
+          print("Sin un conector a la base de datos, el programa no puede continuar")
+          print("con la ejecucion.")
+          print("\nPuede instalar el conector a traves de pip con el siguiente comando:")
+          print("\t\tpip install PyMySQL")
+          print("o puede consultar otras formas de instalacion en la documentacion")
+          print("oficial del conector:")
+          print("https://pymysql.readthedocs.io/en/latest/")
+          print("\n"*2+"Terminando ejecucion del programa.")
+
+        else: # Libreria presente
+          print("\nConector PyMySQL presente en el sistema.")
+
+          # ##### Realizar conexion al servidor de la base de datos #####
+          # Comprueba si hay un servidor con los parametros especificados
+          print("Intentando conectar con el servidor...")
+          retorno = base_datos.crear_conexion(parametros[0], parametros[1], parametros[2], True)
+
+          print(retorno[1]) # Imprimir mensaje de retorno
+
+          if(retorno[0] == 0): # La conexion es correcta
+            # Asignar la conexion a la variabñe
+            conexion = retorno[2]
+
+            # ##### Comprobar existencia de base de datos #####
+            # Se realiza un use con el nombre de la base de datos, para 
+            # comprobar su existencia.
+            retorno = base_datos.ejecutar_instruccion(conexion, (parametros[0], parametros[1], parametros[2]), f"USE {nombre_base_datos}")
+
+            print(retorno[1]) # Imprimir mensaje de retorno
+
+            if(retorno[0] == 0): # La base de datos existe.
+              print(f"\nLa base de datos {nombre_base_datos} esta presente y lista para utilizar.")
+              llamar_menu = True # Incializacion correcta, llamar al menu
+            
+            else: # La base de datos no esta presente, crearla
+              # ##### Crear Base de datos #####
+              print("Creando la base de datos...")
+              retorno = base_datos.crear_base_datos(nombre_base_datos)
+
+              print(retorno[1]) # Imprimir mensaje de retorno
+
+              if(retorno[0] == 0): # Base de datos creada correctamente
+                llamar_menu = True
   
-  else:
-    print("El conector PyMySQL no esta presente en el sistema.")
-    print("Sin un conector a la base de datos, el programa no puede continuar")
-    print("con la ejecucion.")
-    print("\nPuede instalar el conector a traves de pip con el siguiente comando:")
-    print("\t\tpip install PyMySQL")
-    print("o puede consultar otras formas de instalacion en la documentacion")
-    print("oficial del conector:")
-    print("https://pymysql.readthedocs.io/en/latest/")
 
-    print("\n"*2+"Terminando ejecucion del programa."+"\n"+"#"*60, end=" ")
+  if(llamar_menu): # La inicializacion del programa ha sido correcta
+    print("\nInicializacion del programa terminada.")
+    print("Cargando menu principal.")
+    print("#"*60)
+    menu(conexion, (parametros[0], parametros[1], parametros[2], nombre_base_datos))
+
+  else: # Inicializacion erronea, terminar ejecucion
+    print("#"*60)
 
 
 # ######################################################################### #
