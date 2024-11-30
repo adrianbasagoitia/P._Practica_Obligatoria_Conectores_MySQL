@@ -679,4 +679,96 @@ def query_insert_into(nombre_tabla:str, nombre_columnas:list[str], filas:list[tu
   return (0, "Query para generar insert escrita.", query)
 
 
+# ######################################################################### #
+def query_delete_from(nombre_tabla:str, where:list[tuple], join:list[tuple] = None):
+  """
+  Crea una query para eliminar filas de una tabla.
 
+  Es un metodo interno al programa, el usuario nunca lo tocara o modificara.
+  Por lo tanto, no se verifica la validez de los parametros introducidos.
+  Se asume que siempre son correctos.
+
+  Args:
+      nombre_tabla (str): 
+        Nombre de la tabla donde se insertaran las nuevas filas.
+
+      where (list[tuple]):
+        Lista de tuplas, cada tupla es una condicion que se debe anyadir al
+        where. Cada tupla consta de cuatro posiciones:
+          - Nombre de la tabla (str):
+            Tabla sobre la que se comprobara la condicion.
+
+          - Nombre del campo (str):
+            Nombre del campo sobre el cual aplicar la condicion.
+          
+          - Condicion (str):
+            Condicion a aplicar sobre el campo, solo se acepta <, > o =.
+          
+          - Valor de la condicion (str):
+            Valor a aplicar con la condicion sobre el campo. Si es una
+            cadena de caracteres se deben introducir " o '.
+
+      join (list[tuple], optional):
+        Lista de tuplas, cada tupla es un join que se debe anyadir a la 
+        consulta. Cada tupla, consta de 4 posiciones:
+          - Tipo de join (str):
+            Tipo  de join a anadir a la consulta.
+
+          - Nombre de la tabla (str):
+            Nombre de la tabla sobre la que hacer el join.
+          
+          - Campo tabla original (str):
+            Campo de la tabla original por el cual hacer el join.
+          
+          - Campo tabla join (str):
+            Campo de la tabla anyadida por el cual hacer el join.
+        Este es un parametro opcional. Su valor por defectos es None.
+        
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - query (str): 
+          Cadena de caracteres conteniendo la query para ejecutar sobre la 
+          conexion al servidor de la base de datos.
+  """  
+  # Local variables
+  query = "DELETE " # Query a crear
+
+  # Local code
+  ##### Nombre Tabla #####
+  query += f"{nombre_tabla.upper()} " # Anyadir el nombre de la tabla de la que 
+    # borrar
+  query += f"FROM {nombre_tabla.upper()}\n"
+
+
+  ##### Join #####
+  if(join is not None): # Si hay que hacer algun Join
+    # Estructura de la tupla de un join
+    # Tipo Join (Inner, Left, Right), Nombre Tabla | nombre_campo_tabla |
+    # nombre_campo_tabla_join
+    for i in range(0, len(join)):
+      query += f"\t{join[i][0].upper()} {join[i][1].upper()}\n\t\tON {nombre_tabla.upper()}.{join[i][2].upper()} = {nombre_tabla.upper()}.{join[i][3].upper()}\n"
+      # Por cada join una linea. Tipo de Join nombre_tabla ON 
+      # nombre_tabla_original.campo = nombre_tabla.campo
+      # Ej INNER JOIN DEPARTAMENTO ON EMPLEADO.DEPARTAMENTO = DEPARTAMENTO.ID
+  
+  ##### Where #####
+  query += "\tWHERE\n" # Anyadir el where
+
+  # Estructura de la tupla de un where
+  # nombre_tabla | nombre_campo | condicion (<, >, =) | valor |
+  for i in range(0, len(where)): # Recorrer la lista de condiciones del where
+    # Anyadir el where
+    query += f"\t\t{where[i][0].upper()}.{where[i][1].upper()} {where[i][2].upper()} {where[i][3].upper()}"
+
+    if(i != len(where)-1): # Si no es la ultima clausula, anyadir el AND
+      query += " AND\n"
+  
+  # Al final de la consulta, anyadir el punto y coma
+  query += ";"
+
+  return (0, "Query para generar delete from escrita", query)
