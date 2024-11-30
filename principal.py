@@ -1,6 +1,7 @@
 # ############################################################################ #
 #                                   IMPORT 
 # ############################################################################ #
+import os
 
 
 # ############################################################################ #
@@ -31,12 +32,58 @@ def iniciar_programa():
     print("Sin un conector a la base de datos, el programa no puede continuar")
     print("con la ejecucion.")
     print("\nPuede instalar el conector a traves de pip con el siguiente comando:")
-    print("pip install PyMySQL")
+    print("\t\tpip install PyMySQL")
     print("o puede consultar otras formas de instalacion en la documentacion")
     print("oficial del conector:")
     print("https://pymysql.readthedocs.io/en/latest/")
 
     print("\n"*2+"Terminando ejecucion del programa."+"\n"+"#"*60, end=" ")
+
+
+# ######################################################################### #
+def comprobar_sistema_operativo():
+  """
+  Comprueba que sistema operativo esta ejecutando el fichero .py.
+
+  La comprobacion se realiza mediante el atributo name de la libreria os.
+
+  Solo se aceptan sistema operativos Windows (nt), o sistemas operativos
+  Linux / UNIX (posix). Esto es una decision de disenyo basada en los sistemas
+  operativos a los que los desarrolladores tienen acceso.
+
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de retorno (int): 0 en caso de ejecucion correcta, -1 en
+          cualquier otro caso.
+        - mensaje de ejecucion (str): Mensaje para el usuario informando del
+          retorno de la ejecucion del metodo.
+        - separador (str): Caracter separador de rutas del sistema de ficheros.
+  """
+  # Local variables
+  sistema_operativo:str = None # Almacena el nombre del sistema operativo
+  # donde se esta ejecutando el fichero .py
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 2 o 3 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de retorno de ejecucion, el separador del
+  # sistema de ficheros: Opcional.
+
+
+  # Local code
+  # Obtener el sistema operativo de la maquina donde se esta ejecutando
+  # el fichero python
+  sistema_operativo = os.name
+
+  if(sistema_operativo == "nt"): # Si es sistema operativo Windows
+    retorno = (0, "\nSistema operativo Windows detectado.", os.sep)
+  
+  elif(sistema_operativo == "posix"): # Si es sistema operativo Linux / UNIX
+    retorno = (0, "\nSistema operativo Linux / UNIX detectado.", os.sep)
+  
+  else: # Cualquier otro sistema operativo
+    retorno = (-1, "\nERROR. El programa no soporta la ejecucion en el sistema "+
+    f"operativo {sistema_operativo}.\n Terminando la ejecucion del programa.")
+  
+  return retorno
 
 
 # ######################################################################### #
@@ -81,5 +128,5 @@ if __name__ == "__main__":
   # Local variables 
   
   # Local code
-  pass
+  iniciar_programa()
   
