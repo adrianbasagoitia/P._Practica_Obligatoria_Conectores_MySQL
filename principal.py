@@ -4,6 +4,10 @@
 import os
 import base_datos
 import fichero
+import utilidades
+import empleado
+import departamento
+import proyecto
 
 
 # ############################################################################ #
@@ -357,6 +361,63 @@ def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
       retorno = (-1, "Numero de lineas potencialmente validas incorrecto.")
   
   return retorno
+
+
+# ######################################################################### #
+def menu(conexion, parametros_conexion:tuple):
+  """
+  Menu principal del programa.
+
+  Imprime por salida estandar (Consola) el menu principal del programa, y pide
+  al usuario la introduccion por entrada estandar (Teclado) del indice de la
+  opcion que desea realizar. 
+    - En caso de ser correcta, se redirige al menu correspondiente. 
+    - Por el contrario, si es una opcion erronea se informa al 
+  usuario del error.
+
+  Para salir del menu, y por tanto del programa, se pide al usuario confirmar
+  la accion.
+  """
+  # Local variables
+  entrada:str = None # Caracteres introducidos por el usuario a traves de 
+  # entrada estandar (Teclado).
+  salir:bool = False # Almacena si el usuario quiere salir del programa (True)
+  # o continuar con la ejecucion (False).
+
+  # Local code
+  while(not salir): # Iterar mientras que el usuario no confirme la salida
+    # Imprimir menu
+    print("\n"*2+"*"*60)
+    print("Menu principal:")
+    print("1 - Empleado.")
+    print("2 - Departamento.")
+    print("3 - Proyecto.")
+    print("0 - Salir")
+
+    # Pedir opcion a realizar al usuario
+    entrada = input("\nIntroduzca el numero de la opcion que desea realizar: ")
+
+    # Filtrar opciones
+    if(entrada == "0"): # Salir
+      salir = utilidades.pedir_confirmacion("¿Quiere salir del programa?")
+
+      if(salir): # Si la salida esta confirmada
+        print("\nAdios.")
+      else: # Si la salida no se confirma
+        print("\nSalida cancelada.")
+    
+    elif(entrada == "1"): # Menu Empleado
+      empleado.menu_empleado(conexion, parametros_conexion)
+      
+
+    elif(entrada == "2"): # Menu Departamento
+      departamento.menu_departameto(conexion, parametros_conexion)
+    
+    elif(entrada == "3"): # Menu proyecto
+      proyecto.menu_proyecto(conexion, parametros_conexion)
+    
+    else: # Opcion erronea
+      print(f"\nERROR. La opcion \"{entrada}\" no es una entrada valida.")
 
 
 # ############################################################################ #
