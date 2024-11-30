@@ -522,6 +522,85 @@ def query_eliminar_tabla(nombre_tabla:str):
 
 
 # ######################################################################### #
+def query_alter_table_add_fk(nombre_tabla:str, nombre_constraint:str, nombre_columna:str, nombre_tabla_referenciada:str, nombre_columna_referenciada:str, on_delete:str = None, on_update:str = None):
+  """
+  Crea una query de tipo ALTER TABLE para anyadir una FOREIGN KEY a una tabla
+  ya existente.
+
+
+  Args:
+      nombre_tabla (str):
+        Nombre de la tabla a la que anyadir la restriccion de clave foranea.
+      
+      nombre_constraint (str):
+        Nombre de la restriccion asociada a la clave foranea.
+
+      
+      nombre_columna (str):
+        Nombre de la columna que sera la clave foranea.
+
+      
+      nombre_tabla_referenciada (str):
+        Nombre de la tabla sobre la que se hace la clave foranea.
+
+      
+      nombre_columna_referenciada (str):
+        Nombre de la columna de la tabla sobre la que se hace la clave foranea.
+      
+      on_delete (str):
+        Restriccion de integridad referencial en el caso de borrado de la fila.
+        Si no se requiere en la consulta se debe dejar como None.
+        
+      on_update (str):
+        Restriccion de integridad referencial en el caso de modificacion de la 
+        fila. Si no se requiere en la consulta se debe dejar como None.
+       
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - query (str): 
+          Cadena de caracteres conteniendo la query para ejecutar sobre la 
+          conexion al servidor de la base de datos.
+  """   
+  # Local variables
+  query:str = "ALTER TABLE " # Query a crear
+
+
+  # Local code
+  # ##### Nombre tabla #####
+  query += f"{nombre_tabla.upper()} "
+
+  # ##### Nombre constraint #####
+  query += f"ADD CONSTRAINT {nombre_constraint.upper()} "
+
+  # ##### Nombre columna #####
+  query += f"FOREIGN KEY ({nombre_columna.upper()}) "
+
+  # ##### Tabla referenciada #####
+  query += f"REFERENCES {nombre_tabla_referenciada.upper()} ({nombre_columna_referenciada.upper()}) "
+
+  # ##### On Delete #####
+  if(on_delete is not None): # Si hay ON DELETE
+    query += f"ON DELETE {on_delete.upper()} "
+  
+  # ##### On Update ##### 
+  if(on_update is not None): # Si hay ON UPDATE
+    query += f"ON UPDATE {on_delete.upper()} "
+
+  # Eliminar el posible espacio en blanco
+  query = query.strip()
+
+  # Al final de la query anyadir el punto y coma
+  query += ";"
+
+  return (0, "Query para alterar la tabla escrita.", query)
+
+
+# ######################################################################### #
 def query_insert_into(nombre_tabla:str, nombre_columnas:list[str], filas:list[tuple]):
   """
   Crea una query para insertar datos en una tabla.
@@ -600,80 +679,4 @@ def query_insert_into(nombre_tabla:str, nombre_columnas:list[str], filas:list[tu
   return (0, "Query para generar insert escrita.", query)
 
 
-# ######################################################################### #
-def query_alter_table_add_fk(nombre_tabla:str, nombre_constraint:str, nombre_columna:str, nombre_tabla_referenciada:str, nombre_columna_referenciada:str, on_delete:str = None, on_update:str = None):
-  """
-  Crea una query de tipo ALTER TABLE para anyadir una FOREIGN KEY a una tabla
-  ya existente.
 
-
-  Args:
-      nombre_tabla (str):
-        Nombre de la tabla a la que anyadir la restriccion de clave foranea.
-      
-      nombre_constraint (str):
-        Nombre de la restriccion asociada a la clave foranea.
-
-      
-      nombre_columna (str):
-        Nombre de la columna que sera la clave foranea.
-
-      
-      nombre_tabla_referenciada (str):
-        Nombre de la tabla sobre la que se hace la clave foranea.
-
-      
-      nombre_columna_referenciada (str):
-        Nombre de la columna de la tabla sobre la que se hace la clave foranea.
-      
-      on_delete (str):
-        Restriccion de integridad referencial en el caso de borrado de la fila.
-        Si no se requiere en la consulta se debe dejar como None.
-        
-      on_update (str):
-        Restriccion de integridad referencial en el caso de modificacion de la 
-        fila. Si no se requiere en la consulta se debe dejar como None.
-       
-  Returns:
-      tuple: tres posiciones:
-        - codigo de resultado (int): 
-          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
-        - mensaje de ejecucion (str): 
-          Mensaje para el usuario informando del resultado de la ejecucion 
-          del metodo.
-        - query (str): 
-          Cadena de caracteres conteniendo la query para ejecutar sobre la 
-          conexion al servidor de la base de datos.
-  """   
-  # Local variables
-  query:str = "ALTER TABLE " # Query a crear
-
-
-  # Local code
-  # ##### Nombre tabla #####
-  query += f"{nombre_tabla.upper()} "
-
-  # ##### Nombre constraint #####
-  query += f"ADD CONSTRAINT {nombre_constraint.upper()} "
-
-  # ##### Nombre columna #####
-  query += f"FOREIGN KEY ({nombre_columna.upper()}) "
-
-  # ##### Tabla referenciada #####
-  query += f"REFERENCES {nombre_tabla_referenciada.upper()} ({nombre_columna_referenciada.upper()}) "
-
-  # ##### On Delete #####
-  if(on_delete is not None): # Si hay ON DELETE
-    query += f"ON DELETE {on_delete.upper()} "
-  
-  # ##### On Update ##### 
-  if(on_update is not None): # Si hay ON UPDATE
-    query += f"ON UPDATE {on_delete.upper()} "
-
-  # Eliminar el posible espacio en blanco
-  query = query.strip()
-
-  # Al final de la query anyadir el punto y coma
-  query += ";"
-
-  return (0, "Query para alterar la tabla escrita.", query)
