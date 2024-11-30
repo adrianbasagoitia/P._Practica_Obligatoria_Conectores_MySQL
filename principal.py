@@ -286,6 +286,32 @@ def comprobar_instalacion_pymyqsl():
 
 # ######################################################################### #
 def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
+  """
+  Obtiene los parametros de conexion con la base de datos del fichero de
+  configuracion.
+
+  Args:
+      directorio_trabajo (str): 
+        Ruta absoluta del fichero que contiene al fichero.py, y donde debe
+        estar localizado el fichero de configuracion.
+
+      nombre_fichero (str):
+        Fichero de configuracion conteniendo los parametros de la conexion
+        al servidor de la base de datos.
+
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - parametros de la conexion (tuple, optional): 
+          Tupla conteniendo los parametros de la conexion. 3 posiciones:
+          Nombre del usuario, Contrasenya del usuario, puerto donde se
+          encuentra ejecutando el servidor de la base de datos. Opcional.
+        - 
+  """  
   # Local variables
   retorno_otros:tuple = None # Tupla conteniendo el retorno de ejecucion de otros metodos.
   lineas:list[str] = None # Lista de lineas leidas del fichero
@@ -302,11 +328,11 @@ def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
     # Eliminar lineas en blanco y comentarios ("# ")
     indice = len(lineas)-1
 
-    while(indice >= 0):
+    while(indice >= 0): # Mientras existan lineas por comprobar
       # Eliminar caracteres en blanco
       lineas[indice] = lineas[indice].strip()
 
-      # La linea esta en blanco o es un comentario
+      # La linea esta en blanco o es un comentario:
       # Eliminar de la lista
       if(lineas[indice] == "" or lineas[indice]):
         lineas.pop(indice)
@@ -320,7 +346,7 @@ def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
       lineas = lineas[0].split(";")
 
       if(len(lineas) == 3): # Hay 3 posiciones, que corresponden con los tres
-        # paramteros requeridos, no se puede comprobar su validez, mas alla de 
+        # paramteros requeridos, no se puede comprobar su validez mas alla de 
         # esto.
         retorno = (0, "Parametros leidos del fichero exitosamente", (lineas[0], lineas[1], lineas[2]))
       
