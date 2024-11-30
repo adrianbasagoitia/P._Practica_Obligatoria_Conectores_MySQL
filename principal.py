@@ -3,6 +3,7 @@
 # ############################################################################ #
 import os
 import base_datos
+import fichero
 
 
 # ############################################################################ #
@@ -281,6 +282,55 @@ def comprobar_instalacion_pymyqsl():
     instalado = False
   
   return instalado
+
+
+# ######################################################################### #
+def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
+  # Local variables
+  retorno_otros:tuple = None # Tupla conteniendo el retorno de ejecucion de otros metodos.
+  lineas:list[str] = None # Lista de lineas leidas del fichero
+  indice:int = None # Indice para recorrer un bucle
+
+
+  # Local code
+  # Intentar leer el contenido del fichero
+  retorno_otros = fichero.leer_fichero(directorio_trabajo, nombre_fichero)
+
+  if(retorno_otros[0] == 0): # Si la lectura es correcta
+    lineas = retorno_otros[2] # Asignar las lineas leidas a la variable
+
+    # Eliminar lineas en blanco y comentarios ("# ")
+    indice = len(lineas)-1
+
+    while(indice >= 0):
+      # Eliminar caracteres en blanco
+      lineas[indice] = lineas[indice].strip()
+
+      # La linea esta en blanco o es un comentario
+      # Eliminar de la lista
+      if(lineas[indice] == "" or lineas[indice]):
+        lineas.pop(indice)
+      
+      # Mirar la siguiente linea
+      indice -= 1
+    
+    # Tras recorrer la lista, comprobar si solo existe una unica linea
+    if(len(lineas) == 1):
+      # Solo hay una linea, dividirla por ;
+      lineas = lineas[0].split(";")
+
+      if(len(lineas) == 3): # Hay 3 posiciones, que corresponden con los tres
+        # paramteros requeridos, no se puede comprobar su validez, mas alla de 
+        # esto.
+        retorno = (0, "Parametros leidos del fichero exitosamente", (lineas[0], lineas[1], lineas[2]))
+      
+      else: # Algo es erroneo
+        retorno = (-1, "Numero de parametros en el fichero incorrecto.")
+    
+    else: # Hay mas de una linea potencialmente valida
+      retorno = (-1, "Numero de lineas potencialmente validas incorrecto.")
+  
+  return retorno
 
 
 # ############################################################################ #
