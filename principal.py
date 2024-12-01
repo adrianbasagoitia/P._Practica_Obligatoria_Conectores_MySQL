@@ -338,7 +338,7 @@ def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
 
       # La linea esta en blanco o es un comentario:
       # Eliminar de la lista
-      if(lineas[indice] == "" or lineas[indice]):
+      if(lineas[indice] == "" or lineas[indice].startswith("# ")):
         lineas.pop(indice)
       
       # Mirar la siguiente linea
