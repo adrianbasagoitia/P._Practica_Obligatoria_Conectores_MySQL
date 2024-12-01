@@ -1,7 +1,8 @@
 # ############################################################################ #
 #                                   IMPORT 
 # ############################################################################ #
-
+import re
+from re import Match, Pattern
 
 # ############################################################################ #
 #                                   GLOBAL 
@@ -146,5 +147,109 @@ def pedir_campo(mensaje:str, nombre_campo:str):
   if(intentos == 0 and not valido): # Numero maximo de intentos alcanzado y no
     # es un campo valido
     retorno = (-1, "\nNumero maximo de intentos alcanzado. Operacion cancelada.")
+
+  return retorno
+
+
+# ######################################################################### #
+def validar_campo(campo:str, nombre_campo:str):
+  """
+  Valida el valor de un campo introducido por el usuario.
+
+  En primer lugar obtiene el nombre del campo, para crear mensajes para el 
+  usuario. Posteriormente, crea el Pattern y el Matcher en base a la expresion
+  regular obtenida de obtener_expresion_regular a traves de nombreCampo.
+
+  Posteriormente realiza un fullmatch de campo.
+  - Si no es coincidente se crea la tupla conteniendo "-1" y el mensaje de 
+    error.
+  - Si coincide, se debe comprobar si hay que realizar comprobaciones 
+    adicionales, es decir, es un campo numerico. Se realiza un casting del 
+    campo a double y se comprueba con los valores minimo y maximo obtenidos de 
+    obtener_expresion_regular. Si no esta entre los valores, se crea un mensaje 
+    de error personalizado para el usuario. En otro caso, el campo es valido.
+
+  Args:
+      campo (str): 
+        Cadena de caracteres introducida por el usuario para comprobar su 
+        validez.
+      
+      nombreCampo (str): 
+        Nombre del campo que se tiene que validar. Sirve para obtener la 
+        expresion regular que se ha de utilizar para validar el campo.
+        DEBE ser una de las claves del diccionario almacenado en 
+        obtener_expresion_regular. Se da por hecho de que SIEMPRE sera una 
+        clave valida.
+
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de retorno (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del retorno de la ejecucion del 
+          metodo.
+        - campo (str): 
+          El campo introducido por el usuario en caso de ser valido, es 
+          opcional.
+  """
+  # Local variables
+  caracteristicas:list = None # Las caracteristicas del campo, tiene 1 o 3 
+  # posiciones: 0 - Expresion regular, 1 - Valor minimo, 2 - Valor maximo
+  pattern:Pattern = None # Patron que almacena la expresion regular para validar
+  # el campo compilada.
+  matcher:Match = None # Objeto devuelto despues de validar el campo con 
+  # el Pattern. Si no es valido su valor no cambia.
+  retorno_expresion:tuple = None # Tupla que almacena el retorno de
+  # obtener_expresion_regular
+  campo_t:str = None # Almacena el nombre del campo pedido. Ej: titulo, autor.
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 2 o 3 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de retorno de ejecucion, campo introducido
+  # por el usuario si es valido: Opcional.
+
+  # Local code
+  # Obtener el nombre del campo
+  campo_t = nombre_campo.split("_")[1]
+
+  # Intentar obtener expresion regular
+  retorno_expresion = obtener_expresion_regular(nombre_campo)
+
+  if(retorno_expresion[0] != 0): # Si la expresion no ha sido obtenida
+    retorno = (-1, retorno_expresion[1])
+  
+  else: # La expresion ha sido obtenida
+    caracteristicas = retorno_expresion[2]
+
+    # Crear el patron, se utiliza la primera posicion de la lista caracteristicas
+    # El caracter ^ se utiliza para que compruebe el inicio de la linea
+    # El caracter $ se utiliza para que compruebe el final de la linea
+    pattern = re.compile("^"+caracteristicas[0]+"$")
+    
+    # Comprobar que el patron coincide totalmente
+    matcher = pattern.fullmatch(campo)
+
+    if(matcher is not None): # El campo es valido
+      # Comprobar si hay que realizar comprobaciones adicionales
+      if(len(caracteristicas) == 3): # Campo numerico
+        campo_num = float(campo) # Se realiza el casting a float por simplicidad,
+        # Se puede comparar numeros decimales con numeros enteros.
+
+        # Comprobar valores del campo
+        if(campo_num >= caracteristicas[1] and campo_num <= caracteristicas[2]):
+          # Campo correcto
+          retorno = (0, f"El {campo_t} \"{campo}\" es valido.", campo)
+
+        elif(campo_num < caracteristicas[1]): # Menor que valorMinimo
+          retorno = (-1, f"\nEl {campo_t} tiene un valor menor al aceptado. {campo_num} < {caracteristicas[1]}.")
+
+        elif(campo_num > caracteristicas[2]): # Mayor que valor maximo
+          retorno = (-1, f"\nEl {campo_t} tiene un valor mayor al aceptado. {campo_num} > {caracteristicas[2]}.")
+        
+      elif(len(caracteristicas) == 1): # Campo Texto. 
+        # No hay que hacer comprobaciones adicionales
+        retorno = (0, f"\nEl {campo_t}: \"{campo}\" es valido.", campo)
+    
+    else: # El campo no es valido
+      retorno = (-1, f"\nEl valor \"{campo}\" no es valido para {campo_t}.")
 
   return retorno
