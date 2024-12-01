@@ -255,6 +255,7 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
       else: # Obtener el resultado de la query
         contenido_query = cursor.fetchall()
         mensaje = f"\nQuery ejecutada con exito y contenido almacenado."
+        cursor.close() # Cerrar el cursor despues de utilizarlo
       
     except pymysql.Error as e: # Cualquier error en el servidor
       mensaje = f"\nERROR. Error al ejecutar la query {query}: \n{e}"
