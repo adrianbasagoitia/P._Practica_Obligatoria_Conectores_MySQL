@@ -187,13 +187,8 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
     # Hacer la query
     retorno_otros = query.query_insert_into("proyecto", ["nombre", "descripcion", "fecha_inicio", "fecha_fin"], [(f"\"{campos[0]}\"", f"\"{campos[1]}\"", "NOW()", "NOW()")])
 
-    print(retorno_otros[2]) # Imprimir la query, solo debug
-
     # Ejecutar la instruccion
     retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
-
-    print(retorno_otros[1]) # Imprimir mensaje, solo debug
-
 
     if(retorno_otros[0] == 0): # Insercion correcta
       retorno = (0, "Proyecto insertado en la base de datos.")
