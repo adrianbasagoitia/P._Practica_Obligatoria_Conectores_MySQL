@@ -59,7 +59,6 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
     elif(entrada == "1"): # Alta proyecto
       alta_proyecto(conexion, parametros_conexion)
       
-
     elif(entrada == "2"): # Baja proyecto
       baja_proyecto(conexion, parametros_conexion)
     
@@ -238,6 +237,7 @@ def buscar_proyecto(conexion, parametros_conexion:tuple):
   # retorno del metodo. 2 o 3 posiciones: Codigo ejecucion (0 - Correcta;
   # -1 incorrecta), mensaje de resultado de ejecucion, proyecto_pedido 
   # (opcional).
+
 
   # Local code
   # Pedir el nombre al usuario
