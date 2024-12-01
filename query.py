@@ -61,7 +61,7 @@ def query_eliminar_base_datos(nombre_base_datos:str):
   # Local variables
 
   # Local code
-  return (0, "\nQuery para la eliminacion de la base de datos escrita.", f"DROP DATABASE {nombre_base_datos.upper()};")
+  return (0, "\nQuery para la eliminacion de la base de datos escrita.", f"DROP DATABASE IF EXISTS {nombre_base_datos.upper()};")
 
 
 # ######################################################################### #
