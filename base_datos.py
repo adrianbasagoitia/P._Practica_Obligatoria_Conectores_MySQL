@@ -249,6 +249,9 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
       # Ejecutar la query y obtener el numero de lineas afectadas
       num_filas = cursor.execute(query)
 
+      # Hacer commir sobre la conexion, aplicar cambios en el servidor
+      conn.commit()
+
       if(num_filas == 0): # No hay resultado delvuelto de la query
         mensaje = f"\nQuery ejecutada con exito."
       
@@ -275,6 +278,7 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
       retorno = (0, mensaje, contenido_query)
   
   return retorno
+
 
 # ######################################################################### #
 def crear_base_datos(conexion, nombre_base_datos:str, parametros:tuple):
