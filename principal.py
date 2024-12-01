@@ -131,8 +131,6 @@ def iniciar_programa():
             # comprobar su existencia.
             retorno = base_datos.ejecutar_instruccion(conexion, (parametros[0], parametros[1], parametros[2]), f"USE {nombre_base_datos}")
 
-            print(retorno[1]) # Imprimir mensaje de retorno
-
             if(retorno[0] == 0): # La base de datos existe.
               print(f"\nLa base de datos {nombre_base_datos} esta presente y lista para utilizar.")
               llamar_menu = True # Incializacion correcta, llamar al menu
