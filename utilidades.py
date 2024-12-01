@@ -34,7 +34,7 @@ def obtener_expresion_regular(clave:str):
   expresion:str = None # Expresion regular pedida por el usuario
   expresiones_regulares:dict[str, str] = {
   "empleado_nombre":  ["[A-Z0-9.,;&\\- ]{1,120}"],
-  "empleado_correo":  ["([A-Z0-9._]{1,80}(@MYSQL\.COM)){1}"],
+  "empleado_correo":  ["([A-Z0-9._]{1,80}(@MYSQL\\.COM)){1}"],
   "empleado_cargo":   ["[A-Z0-9.,;&\\-_ ]{1,60}"],
   "empleado_salario": ["[0-9]{1,9}([.][0-9]?[0-9])?", 1134.00, 999999999.99],
 
