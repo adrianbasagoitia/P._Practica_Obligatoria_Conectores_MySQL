@@ -349,6 +349,9 @@ def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
       # Solo hay una linea, dividirla por ;
       lineas = lineas[0].split(";")
 
+      for s in lineas: # Eliminar los caracteres en blanco
+        s = s.strip()
+
       if(len(lineas) == 3): # Hay 3 posiciones, que corresponden con los tres
         # paramteros requeridos, no se puede comprobar su validez mas alla de 
         # esto.
