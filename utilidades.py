@@ -253,3 +253,40 @@ def validar_campo(campo:str, nombre_campo:str):
       retorno = (-1, f"\nEl valor \"{campo}\" no es valido para {campo_t}.")
 
   return retorno
+
+
+# ######################################################################### #
+def pedir_confirmacion(mensaje:str):
+  """
+  Pide confirmacion al usuario para realizar una operacion.
+
+  Imprime un mensaje por salida estandar (Consola) personalizado para cada 
+  accion. Si el usuario introduce s o si, la operacion esta confirmada. 
+  En cualquier otro caso, la operacion no se confirma.
+
+  Args:
+      mensaje (str): 
+        Contiene un mensaje personalizado para pedir la confirmacion de la 
+        operacion. Ej: ¿Quiere salir del programa?.
+
+  Returns:
+      bool: Devuelve True si el usuario ha confirmado la opcion, False en
+      cualquier otro caso.
+  """
+  # Local variables
+  confirmado:bool = False # Almacena si el usuario ha confirmado la operacion.
+  entrada:str = None # Caracteres introducidos por el usuario a traves de 
+  # entrada estandar (Teclado).
+
+
+  # Local code
+  # Pedir confirmacion al usuario. Se quitan espacion en blanco al inicio
+  # y al final y se pasa a minuscula
+  entrada = input(mensaje+" (s / Otro caracter): ").strip().lower()
+
+  # Si el usuario introduce s o si, confirma la operacion
+  if(entrada == "si" or entrada == "s"):
+    confirmado = True
+  
+  # Devolver resultado
+  return confirmado
