@@ -157,6 +157,8 @@ def comprobar_conexion(conn):
   
   else: # Ejecucion vorrecta
     retorno = (0, mensaje)
+  
+  return retorno
 
 
 # ######################################################################### #
