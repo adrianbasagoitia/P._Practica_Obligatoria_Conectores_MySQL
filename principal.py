@@ -98,11 +98,11 @@ def iniciar_programa():
         parametros = retorno[2] # Asignar parametros a la variable
 
         # ##### Instalacion de la libreria PyMySQL #####
-        print("Comprobando instalacion del conector PyMySQL...")
+        print("\nComprobando instalacion del conector PyMySQL...")
         conector_presente = comprobar_instalacion_pymyqsl()
 
         if(not conector_presente): # La libreria no esta presente
-          print("El conector PyMySQL no esta presente en el sistema.")
+          print("\nEl conector PyMySQL no esta presente en el sistema.")
           print("Sin un conector a la base de datos, el programa no puede continuar")
           print("con la ejecucion.")
           print("\nPuede instalar el conector a traves de pip con el siguiente comando:")
@@ -117,7 +117,7 @@ def iniciar_programa():
 
           # ##### Realizar conexion al servidor de la base de datos #####
           # Comprueba si hay un servidor con los parametros especificados
-          print("Intentando conectar con el servidor...")
+          print("\nIntentando conectar con el servidor...")
           retorno = base_datos.crear_conexion(parametros[0], parametros[1], parametros[2], True)
 
           print(retorno[1]) # Imprimir mensaje de retorno
@@ -137,7 +137,7 @@ def iniciar_programa():
             
             else: # La base de datos no esta presente, crearla
               # ##### Crear Base de datos #####
-              print("Creando la base de datos...")
+              print("\nCreando la base de datos...")
               retorno = base_datos.crear_base_datos(conexion, nombre_base_datos, parametros)
 
               print(retorno[1]) # Imprimir mensaje de retorno
@@ -148,7 +148,7 @@ def iniciar_programa():
 
   if(llamar_menu): # La inicializacion del programa ha sido correcta
     print("\nInicializacion del programa terminada.")
-    print("Cargando menu principal.")
+    print("Cargando menu principal...")
     print("#"*60)
     menu(conexion, (parametros[0], parametros[1], parametros[2], nombre_base_datos))
 
