@@ -73,4 +73,57 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
     else: # Opcion erronea
       print(f"\nERROR. La opcion \"{entrada}\" no es una entrada valida.")
 
+
 # ######################################################################### #
+def peticiones_campos(indice_peticion:int):
+  """
+  Devuelve cadenas de caracteres conteniendo mensaje de peticion de campos
+  al usuario.
+
+  Dado un indice, comprueba si esta dentro de los limites de la lista de 
+  mensajes, y si es asi, lo devuelve. En caso contrario, devuelve un mensaje
+  de error.
+
+  Args:
+      indice_peticion (int): 
+        Indice de la lista conteniendo el mensaje requerido.
+  
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de retorno (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+
+        - mensaje de ejecucion (str):
+          Mensaje para el usuario informando del
+          retorno de la ejecucion del metodo.
+
+        - mensaje_peticion (str, optional):
+          Mensaje de peticion de un campo al usuario. 
+  """  
+  # Local variables
+  peticiones:list[str] = None # Lista conteniendo cadenas de caracteres para
+    # pedir campos al usuario. 
+
+  # Local code
+  peticiones = [
+    "Introduzca el nombre del proyecto. No puede haber duplicados \n[Letras del alfabeto espanyol, espacios en blanco y los siguientes \ncaracteres \".,;&-\"][Longitud 1 a 60 caracteres]",
+
+    "Introduzca la descripcion del proyecto [Letras del alfabeto espanyol,\nespacios en blanco y los siguientes caracteres \".,;&-\"]\n[Longitud 0 a 255 caracteres]",
+
+    "Introduzca la fecha de finalizacion del proyecto dd-mm-aaaa",
+
+    "Introduzca el identificador del departamento responsable del proyecto",
+
+    "Introduzca el identificador del empleado responsable del proyecto"
+  ]
+
+  if(indice_peticion > 0 and indice_peticion < len(peticiones)): # El indice es 
+    # correcto
+    retorno = (0, "Mensaje de peticion de campo obtenido", peticiones[indice_peticion])
+
+  else: # El indice es incorrecto
+    retorno = (-1, "El indice proporcionado no es valido.")
+  
+  return retorno
+
+
