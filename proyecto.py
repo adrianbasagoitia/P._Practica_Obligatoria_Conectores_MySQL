@@ -203,3 +203,64 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
         # de la ejecucion de la instruccion
   
   return retorno
+
+
+# ######################################################################### #
+def buscar_proyecto(conexion, parametros_conexion:tuple):
+  """
+  Busca un proyecto en la base de datos.
+
+  Dado el nombre del proyecto, escribe la query y la ejecuta.
+
+  El resultado puede ser obtener un proyecto o ninguno, dado que el nombre
+  del proyecto es unico en la base de datos.
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - proyecto_resultado (tuple):
+          Tupla conteniendo el proyecto buscado. Contiene el nombre del 
+          proyecto, su descripcion, la fecha de inicio, la fecha de fin,
+          el nmobre del departamento responsable y el empleado responsable
+          del proyecto.
+  """  
+  # Local variables
+  retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
+
+
+  # Local code
+  # Pedir el nombre al usuario
+  retorno_otros = utilidades.pedir_campo(peticiones_campos(0)[2], "proyecto_nombre")
+
+  if(retorno_otros[0] == -1): # Peticion erronea
+    print(retorno_otros[1])
+  
+  else: # Campo valido
+    retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "nombre"), ("empleado", "nombre")], [("inner join", "departamento", "departamento", "id"), ("inner join", "empleado", "responsable", "id")], [("proyecto", "nombre", "=", f"\"{retorno_otros[2]}\"")])
+
+    # Ejecutar la query
+    retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+    if(retorno_otros[0] == -1): # Ejecucion erronea
+      retorno = (-1, retorno_otros[1])
+    
+    else: # Ejecucion correcta
+      # Obtener el resultado y comprobar si hay proyectos encontrados
+      if(len(retorno_otros) != 3): # Si NO hay proyectos
+        retorno = (0, "\nNo hay proyectos con el nombre proporcionado.")
+      
+      else: # Hay un proyecto con el nombre proporcionado. NO puede haber mas
+        retorno = (0, "Un proyecto encontrado", retorno_otros[2][0])
+    
+    return retorno
