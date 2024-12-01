@@ -5,9 +5,9 @@ import os
 import base_datos
 import fichero
 import utilidades
-import empleado
-import departamento
-import proyecto
+#import empleado
+#import departamento
+#import proyecto
 
 
 # ############################################################################ #
@@ -355,7 +355,11 @@ def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
       if(len(lineas) == 3): # Hay 3 posiciones, que corresponden con los tres
         # paramteros requeridos, no se puede comprobar su validez mas alla de 
         # esto.
-        retorno = (0, "Parametros leidos del fichero exitosamente", (lineas[0], lineas[1], lineas[2]))
+        if(lineas[2].isdigit()): # El puerto son numeros
+          retorno = (0, "Parametros leidos del fichero exitosamente", (lineas[0], lineas[1], int(lineas[2])))
+          # El casting es completamente seguro
+        else:
+          retorno = (-1, "El puerto contiene caracteres no numericos.")
       
       else: # Algo es erroneo
         retorno = (-1, "Numero de parametros en el fichero incorrecto.")
