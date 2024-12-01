@@ -2,6 +2,8 @@
 #                                   IMPORT 
 # ############################################################################ #
 import utilidades
+import query
+import base_datos
 import datetime
 
 # ############################################################################ #
@@ -106,18 +108,18 @@ def peticiones_campos(indice_peticion:int):
 
   # Local code
   peticiones = [
-    "Introduzca el nombre del proyecto. No puede haber duplicados \n[Letras del alfabeto espanyol, espacios en blanco y los siguientes \ncaracteres \".,;&-\"][Longitud 1 a 60 caracteres]",
+    "\nIntroduzca el nombre del proyecto. No puede haber duplicados \n[Letras del alfabeto espanyol, espacios en blanco y los siguientes \ncaracteres \".,;&-\"][Longitud 1 a 60 caracteres]",
 
-    "Introduzca la descripcion del proyecto [Letras del alfabeto espanyol,\nespacios en blanco y los siguientes caracteres \".,;&-\"]\n[Longitud 0 a 255 caracteres]",
+    "\nIntroduzca la descripcion del proyecto [Letras del alfabeto espanyol,\nespacios en blanco y los siguientes caracteres \".,;&-\"]\n[Longitud 0 a 255 caracteres]",
 
-    "Introduzca la fecha de finalizacion del proyecto dd-mm-aaaa",
+    "\nIntroduzca la fecha de finalizacion del proyecto dd-mm-aaaa",
 
-    "Introduzca el identificador del departamento responsable del proyecto",
+    "\nIntroduzca el identificador del departamento responsable del proyecto",
 
-    "Introduzca el identificador del empleado responsable del proyecto"
+    "\nIntroduzca el identificador del empleado responsable del proyecto"
   ]
 
-  if(indice_peticion > 0 and indice_peticion < len(peticiones)): # El indice es 
+  if(indice_peticion >= 0 and indice_peticion < len(peticiones)): # El indice es 
     # correcto
     retorno = (0, "Mensaje de peticion de campo obtenido", peticiones[indice_peticion])
 
@@ -127,3 +129,77 @@ def peticiones_campos(indice_peticion:int):
   return retorno
 
 
+# ######################################################################### #
+def alta_proyecto(conexion, parametros_conexion:tuple):
+  """
+  Crea un nuevo proyecto en la base de datos.
+
+  Pide los campos al usuario, posteriormente escribe la query para insertar
+  el nuevo proyecto en la base de datos y manda ejecutarla.
+
+  El resultado devuelto por este metodo, es el resultado de ejecutar la query.
+  
+  No se comprueba la duplicidad de nombres de proyecto, eso se comprueba en la
+  base de datos.
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+  Returns:
+      tuple: dos posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+  """  
+  # Local variables
+  nombre_campos:list[str] = ["proyecto_nombre", "proyecto_descripcion"]
+  campos:list[str] = [] # Lista de los campos validos proporcionados por el 
+    # usuario.
+  continuar:bool = True # Continuar con la ejecucion del bucle
+  indice:int = 0 # Indice para iterar en un bucle
+  retorno_otros:tuple = None # Tupla conteniendo el retorno de otros metodos
+
+
+  # Local code
+  # Pedir los campos
+  while(indice < len(nombre_campos) and continuar):
+    retorno_otros = utilidades.pedir_campo(peticiones_campos(indice)[2], nombre_campos[indice])
+
+
+    if(retorno_otros[0] == -1):
+      print(retorno_otros[1]) # Imprimir el mensaje de resultado solo en caso 
+        # de error. En caso afirmativo, ya se ha mostrado.
+      
+      # Terminar la ejecucion del bucle
+      continuar = False
+    
+    else: # Ejecucion correcta 
+      campos.append(retorno_otros[2]) # anyadir a la lista de campos validos
+      indice += 1 # Pedir el siguiente campo
+  
+  if(continuar): # Todos los campos pedidos son validos y han sido anyadidos
+    # Hacer la query
+    retorno_otros = query.query_insert_into("proyecto", ["nombre", "descripcion", "fecha_inicio", "fecha_fin"], [(f"\"{campos[0]}\"", f"\"{campos[1]}\"", "NOW()", "NOW()")])
+
+    print(retorno_otros[2]) # Imprimir la query, solo debug
+
+    # Ejecutar la instruccion
+    retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+    print(retorno_otros[1]) # Imprimir mensaje, solo debug
+
+
+    if(retorno_otros[0] == 0): # Insercion correcta
+      retorno = (0, "Proyecto insertado en la base de datos.")
+    
+    else: # Insercion erronea
+      retorno = (-1, retorno_otros[1]) # Devolver el menasje de error devuelto
+        # de la ejecucion de la instruccion
+  
+  return retorno
