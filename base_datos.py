@@ -76,7 +76,7 @@ def crear_conexion(usuario:str, contrasenya:str, puerto:int, es_conexion_inicial
       conn = pymysql.connect(
         user = f"{usuario}",
         password= f"{contrasenya}",
-        port = f"{puerto}"
+        port = puerto
       )
       # Si se llega hasta aqui, la conexion se ha creado correctamente
       mensaje = "\nConexion establecida con el servidor de la base de datos MySQL."
@@ -90,7 +90,7 @@ def crear_conexion(usuario:str, contrasenya:str, puerto:int, es_conexion_inicial
       conn = pymysql.connect(
         user = f"{usuario}",
         password= f"{contrasenya}",
-        port = f"{puerto}",
+        port = puerto,
         database= f"{nombre_base_datos}"
       )
       # Si se llega hasta aqui, la conexion se ha creado correctamente
