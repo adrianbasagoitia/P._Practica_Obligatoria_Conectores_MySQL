@@ -1,7 +1,7 @@
 # ############################################################################ #
 #                                   IMPORT 
 # ############################################################################ #
-
+import query
 
 # ############################################################################ #
 #                                   GLOBAL 
@@ -221,8 +221,12 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
     # Iterar mientras que existan intentos restantes y la conexion no haya sido
     # creada
     while(indice > 0 and not creada):
-      # Intentar crear la conexion
-      retorno_otros = crear_conexion(atributos[0], atributos[1], atributos[2], nombre_base_datos = atributos[3])
+      # Intentar crear la conexion, diferenciar entre conexion inicial y 
+      # subsiguientes
+      if(len(atributos) == 3): # Tres parametros, conexion inicial
+        retorno_otros = crear_conexion(atributos[0], atributos[1], atributos[2], es_conexion_inicial=True)
+      else: # Son 4 parametros
+        retorno_otros = crear_conexion(atributos[0], atributos[1], atributos[2], nombre_base_datos = atributos[3])
 
       if(retorno_otros[0] == -1): # Conexion no creada
         indice -= 1
