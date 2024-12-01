@@ -140,7 +140,7 @@ def iniciar_programa():
             else: # La base de datos no esta presente, crearla
               # ##### Crear Base de datos #####
               print("Creando la base de datos...")
-              retorno = base_datos.crear_base_datos(nombre_base_datos)
+              retorno = base_datos.crear_base_datos(conexion, nombre_base_datos, parametros)
 
               print(retorno[1]) # Imprimir mensaje de retorno
 
