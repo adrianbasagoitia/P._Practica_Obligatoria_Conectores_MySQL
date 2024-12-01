@@ -272,3 +272,194 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
       retorno = (0, mensaje, contenido_query)
   
   return retorno
+
+# ######################################################################### #
+def crear_base_datos(conexion, nombre_base_datos:str, parametros:tuple):
+  """
+  "Script" de creacion de la base de datos en el servidor.
+
+  Paso a paso va creando los componenetes de la base de datos en el siguiente 
+  orden:
+  - Borrar base de datos.
+  - Crear Base de datos.
+  - Usar Base de datos.
+  - Crear tabla Empleado.
+  - Crear tabla Departamento.
+  - Crear tabla Proyecto
+  - Crear tabla intermedia entre empleado y proyecto. Empleado-Proyecto.
+  - Alterar tabla empleado, anyadiendo la clave foranea a departamento.
+
+  Si en algun paso, la ejecucion es erronea, se para la ejecucion del metodo.
+  Y el resultado es erroneo.
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      nombre_base_datos (str): 
+        Nombre de la base de datos a crear en el servidor de la base de 
+        datos.
+
+      parametros (tuple):
+        Tupla con 3 posiciones: usuario, contrasenya, puerto.
+
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de retorno (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del retorno de la ejecucion del 
+          metodo.
+  """  
+  # Local variables
+  retorno_otros:tuple = None # Retorno de la ejecucion de otros metodos
+  continuar = True
+
+  # Local code
+  # Primero: Borrar la base de datos. No importa si no existe. Seguridad ante 
+  # todo.
+  # La ejecucion siempre sera correcta
+  retorno_otros = query.query_eliminar_base_datos(nombre_base_datos)
+
+  # Ejecutar query
+  retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
+
+  # Comprobar resultado
+  if(retorno_otros[0] != 0): # No se ha borrado la base de datos
+    continuar = False # Dejar de ejecutar el metodo
+  
+  # Segundo: Crear la base de datos
+  if(continuar):
+    # La ejecucion siempre sera correcta
+    retorno_otros = query.query_crear_base_datos(nombre_base_datos)
+
+    # Ejecutar query
+    retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
+
+    # Comprobar resultado
+    if(retorno_otros[0] != 0): # No se ha borrado la base de datos
+      continuar = False # Dejar de ejecutar el metodo
+  
+
+  # Tercero: USE sobre la base de datos
+  if(continuar):
+    # ##################################################################
+    # A partir de aqui, la base de datos esta creada, y por lo tanto las 
+    # conexiones deberan contener el nombre de la base de datos, para evitar
+    # realziar el USE continuamente.
+    parametros = (parametros[0], parametros[1], parametros[2], nombre_base_datos)
+    # ##################################################################
+
+    # La ejecucion siempre sera correcta
+    retorno_otros = query.query_usar_base_datos(nombre_base_datos)
+
+    # Ejecutar query
+    retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
+
+    # Comprobar resultado
+    if(retorno_otros[0] != 0): # No se ha borrado la base de datos
+      continuar = False # Dejar de ejecutar el metodo
+  
+
+  # Cuarto: Crear la tabla empleado
+  if(continuar):
+    # La ejecucion siempre sera correcta
+    retorno_otros = query.query_crear_tabla("empleado", True, 
+      [("ID", "integer", False, False, True, None), 
+      ("nombre", "varchar(120)", False, True, False, None),
+      ("correo_electronico", "varchar(90)", False, True, False, None),
+      ("cargo", "varchar(60)", True, False, False, "NULL"),
+      ("fecha_contratacion", "date", False, False, False, None),
+      ("salario", "decimal(9, 2)", False, False, False, "1134.00"),
+      ("departamento", "integer", True, False, False, "NULL")], 
+      ["id"], 
+      [])
+
+    # Ejecutar query
+    retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
+
+    # Comprobar resultado
+    if(retorno_otros[0] != 0): # No se ha borrado la base de datos
+      continuar = False # Dejar de ejecutar el metodo
+
+
+  # Quinto: Crear la tabla Departamento
+  if(continuar):
+    # La ejecucion siempre sera correcta
+    retorno_otros = query.query_crear_tabla("departamento", True,[
+      ("ID", "integer", False, False, True, None), 
+      ("nombre", "varchar(60)", False, True, False, None),
+      ("descripcion", "varchar(255)", True, False, False, None),
+      ("responsable", "integer", True, False, False, "NULL")],
+      [("id")],
+      [("responsable", "empleado", "id", "CASCADE", "SET NULL")])
+
+    # Ejecutar query
+    retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
+
+    # Comprobar resultado
+    if(retorno_otros[0] != 0): # No se ha borrado la base de datos
+      continuar = False # Dejar de ejecutar el metodo
+  
+
+  # Sexto: Crear la tabla Proyecto
+  if(continuar):
+    # La ejecucion siempre sera correcta
+    retorno_otros = query.query_crear_tabla("proyecto", True,[
+      ("ID", "integer", False, False, True, None), 
+      ("nombre", "varchar(90)", False, True, False, None),
+      ("descripcion", "varchar(255)", True, False, False, None),
+      ("fecha_inicio", "date", False, False, False, None),
+      ("fecha_fin", "date", False, False, False, None),
+      ("departamento", "integer", True, False, False, "NULL"),
+      ("responsable", "integer", True, False, False, "NULL")],
+      [("id")],
+      [("responsable", "empleado", "id", "CASCADE", "SET NULL"),
+      ("departamento", "departamento", "id", "CASCADE", "CASCADE")])
+
+    # Ejecutar query
+    retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
+
+    # Comprobar resultado
+    if(retorno_otros[0] != 0): # No se ha borrado la base de datos
+      continuar = False # Dejar de ejecutar el metodo
+  
+
+  # Septimo: Crear la tabla intermedia entre empleado y proyecto
+  if(continuar):
+    # La ejecucion siempre sera correcta
+    retorno_otros = query.query_crear_tabla("empleado_proyecto", True,[
+      ("ID_empleado", "integer", False, False, False, None), 
+      ("ID_proyecto", "integer", False, False, False, None)],
+      ["ID_empleado", "ID_proyecto"],
+      [("ID_empleado", "empleado", "id", "CASCADE", "CASCADE"),
+      ("ID_proyecto", "proyecto", "id", "CASCADE", "CASCADE")])
+
+    # Ejecutar query
+    retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
+
+    # Comprobar resultado
+    if(retorno_otros[0] != 0): # No se ha borrado la base de datos
+      continuar = False # Dejar de ejecutar el metodo
+  
+  # Octavo: Alterar la tabla empleado, anyadiendo la clave foranea a 
+  # departamento.
+  if(continuar):
+    # La ejecucion siempre sera correcta
+    retorno_otros = query.query_alter_table_add_fk("empleado", "empleado_fk_departamento", "departamento", "departamento", "id", "cascade", "cascade")
+
+    # Ejecutar query
+    retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
+
+    # Comprobar resultado
+    if(retorno_otros[0] != 0): # No se ha borrado la base de datos
+      continuar = False # Dejar de ejecutar el metodo
+  
+  # Si ha habido algun error durante la creacion de la base de datos
+  if(not continuar):
+    retorno = (-1, "\nERROR. Error al generar la base de datos."+retorno_otros[1])
+  
+  else: # Todo ha sido creado exitosamente
+    retorno = (0, "\nBase de datos creada de forma exitosa.")
+  
+  return retorno
