@@ -164,6 +164,9 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
   continuar:bool = True # Continuar con la ejecucion del bucle
   indice:int = 0 # Indice para iterar en un bucle
   retorno_otros:tuple = None # Tupla conteniendo el retorno de otros metodos
+  retorno:tuple # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 2 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion.
 
 
   # Local code
@@ -173,8 +176,7 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
 
 
     if(retorno_otros[0] == -1):
-      print(retorno_otros[1]) # Imprimir el mensaje de resultado solo en caso 
-        # de error. En caso afirmativo, ya se ha mostrado.
+      retorno = (-1, retorno_otros[1]) # Construir retorno de ejecucion
       
       # Terminar la ejecucion del bucle
       continuar = False
@@ -232,14 +234,17 @@ def buscar_proyecto(conexion, parametros_conexion:tuple):
   """  
   # Local variables
   retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
-
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 2 o 3 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion, proyecto_pedido 
+  # (opcional).
 
   # Local code
   # Pedir el nombre al usuario
   retorno_otros = utilidades.pedir_campo(peticiones_campos(0)[2], "proyecto_nombre")
 
   if(retorno_otros[0] == -1): # Peticion erronea
-    print(retorno_otros[1])
+      retorno = (-1, retorno_otros[1]) # Construir retorno de ejecucion
   
   else: # Campo valido
     retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "nombre"), ("empleado", "nombre")], [("inner join", "departamento", "departamento", "id"), ("inner join", "empleado", "responsable", "id")], [("proyecto", "nombre", "=", f"\"{retorno_otros[2]}\"")])
