@@ -268,14 +268,14 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
   
 
   if("ERROR" in mensaje): # Ejecucion erronea
-    retorno = (-1, mensaje)
+    retorno = (-1, mensaje, conn)
   
   else: # Ejecucion valida.
     if(contenido_query is None): # No hay lineas afectadas
-      retorno = (0, mensaje)
+      retorno = (0, mensaje, conn)
     
     else: # Hay lineas afectadas
-      retorno = (0, mensaje, contenido_query)
+      retorno = (0, mensaje, conn, contenido_query)
   
   return retorno
 
@@ -453,7 +453,7 @@ def crear_base_datos(conexion, nombre_base_datos:str, parametros:tuple):
   # departamento.
   if(continuar):
     # La ejecucion siempre sera correcta
-    retorno_otros = query.query_alter_table_add_fk("empleado", "empleado_fk_departamento", "departamento", "departamento", "id", "cascade", "cascade")
+    retorno_otros = query.query_alter_table_add_fk("empleado", "empleado_fk_departamento", "departamento", "departamento", "id", "cascade", "set null")
 
     # Ejecutar query
     retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
