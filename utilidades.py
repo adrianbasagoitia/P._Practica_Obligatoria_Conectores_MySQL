@@ -3,6 +3,7 @@
 # ############################################################################ #
 import re
 from re import Match, Pattern
+import datetime
 
 # ############################################################################ #
 #                                   GLOBAL 
@@ -141,7 +142,7 @@ def pedir_campo(mensaje:str, nombre_campo:str):
       if(retorno_validar[0] != -1): # El campo es valido
         # Cambiar valor de booleano para salir del bucle y construir tupla
         valido = True
-        retorno = (0, retorno_validar[1], entrada)
+        retorno = (0, retorno_validar[1], retorno_validar[2])
     
     intentos -= 1 # Restar una unidad al numero de intentos
   
@@ -189,8 +190,8 @@ def validar_campo(campo:str, nombre_campo:str):
         - mensaje de ejecucion (str): 
           Mensaje para el usuario informando del retorno de la ejecucion del 
           metodo.
-        - campo (str): 
-          El campo introducido por el usuario en caso de ser valido, es 
+        - campo (str, optional): 
+          El campo introducido por el usuario en caso de ser valido. Es 
           opcional.
   """
   # Local variables
@@ -293,3 +294,76 @@ def pedir_confirmacion(mensaje:str):
   
   # Devolver resultado
   return confirmado
+
+
+# ######################################################################### #
+def validar_fecha(campo:str, fecha_igual_superior:bool = True):
+  """
+  Valida una fecha introducida por el usuario.
+
+  A traves de la libreria datetime, se valida la fecha introducida por el
+  usuario, comprobando limites numericos y anyos bisiestos.
+
+  Si se anyade la comprobacion de fecha_igual_superior se valida que la fecha
+  introducida sea igual o superior a la del dia actual donde se este ejecutando
+  el programa python.
+
+  Referencias:
+      https://www.geeksforgeeks.org/create-python-datetime-from-string/
+      https://www.geeksforgeeks.org/comparing-dates-python/
+      https://www.geeksforgeeks.org/formatting-dates-in-python/
+
+  Args:
+      campo (str): 
+        Fecha introducida por el usuario que sigue el formato dd-mm-aaaa
+
+      fecha_igual_superior (bool, optional):
+        Indica si la fecha introducida debe ser igual o superior a la actual 
+        del sistema donde se esta ejecutando el programa python.
+
+  Returns:
+      tuple: dos o tres posiciones:
+        - codigo de retorno (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del retorno de la ejecucion del 
+          metodo.
+        - fecha (str, optional): 
+          Un cadena de caracteres conteniendo una fecha valida en formato
+          americano yyyy-mm-dd. Es opcional.
+  """  
+
+  # Local variables
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 2 o 3 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de retorno de ejecucion, fecha valida preparada 
+  # para insertar en la base de datos(Opcional)
+  fecha:datetime = None # Fecha valida
+
+
+  # Local code
+  try:
+    # Convertir la fecha a datetime.date
+    # Automaticamente al imprimir el objeto, se imprime como
+    # formato americano aceptado por la base e datos
+    fecha = datetime.datetime.strptime(campo, "%d-%m-%Y").date()
+
+    if(fecha_igual_superior): # La fecha debe ser superior a la actual
+      if(fecha >= datetime.datetime.now().date()): # Comparar con la fecha 
+        # actual
+        retorno = (0, "Fecha valida", str(fecha))
+      
+      else: # La fecha no cumple los requisitos
+        retorno = (-1, "La fecha no es superior a la actual")
+    
+    else: # Sin comprobaciones adicionales
+      retorno = (0, "Fecha valida", str(fecha))
+
+
+  except Exception as e: # Si se lanza algun error
+    print(e)
+    retorno = (-1, "La fecha no es valida.")
+  
+  return retorno
+
+print(pedir_campo("Fecha", "general_fecha"))
