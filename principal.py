@@ -155,7 +155,7 @@ def iniciar_programa():
     else: # No hay parametros
       print("\nERROR. No se han podido obtener parametros para realizar la ")
       print("conexion a la base de datos.")
-      print("\Terminando ejecucion del programa.")
+      print("\nTerminando ejecucion del programa.")
   
 
   if(llamar_menu): # La inicializacion del programa ha sido correcta
