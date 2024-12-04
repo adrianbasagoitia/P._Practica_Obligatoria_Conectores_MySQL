@@ -365,5 +365,3 @@ def validar_fecha(campo:str, fecha_igual_superior:bool = True):
     retorno = (-1, "La fecha no es valida.")
   
   return retorno
-
-print(pedir_campo("Fecha", "general_fecha"))
