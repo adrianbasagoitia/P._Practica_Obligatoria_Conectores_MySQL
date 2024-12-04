@@ -54,7 +54,7 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
 
     # Filtrar opciones
     if(entrada == "0"): # Salir
-      salir = utilidades.pedir_confirmacion("¿Quiere salir del programa?")
+      salir = utilidades.pedir_confirmacion("\n¿Quiere salir del programa?")
 
       if(salir): # Si la salida esta confirmada
         print("\nAdios.")
@@ -63,7 +63,8 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
     
 
     elif(entrada == "1"): # Alta proyecto
-      alta_proyecto(conexion, parametros_conexion)
+      retorno_otros = alta_proyecto(conexion, parametros_conexion)
+      print(retorno_otros[1])
       
 
     elif(entrada == "2"): # Baja proyecto
@@ -179,7 +180,7 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
           del metodo.
   """  
   # Local variables
-  nombre_campos:list[str] = ["proyecto_nombre", "proyecto_descripcion"]
+  nombre_campos:list[str] = ["proyecto_nombre", "proyecto_descripcion", "general_fecha"]
   campos:list[str] = [] # Lista de los campos validos proporcionados por el 
     # usuario.
   continuar:bool = True # Continuar con la ejecucion del bucle
@@ -208,7 +209,7 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
   
   if(continuar): # Todos los campos pedidos son validos y han sido anyadidos
     # Hacer la query
-    retorno_otros = query.query_insert_into("proyecto", ["nombre", "descripcion", "fecha_inicio", "fecha_fin"], [(f"\"{campos[0]}\"", f"\"{campos[1]}\"", "NOW()", "NOW()")])
+    retorno_otros = query.query_insert_into("proyecto", ["nombre", "descripcion", "fecha_inicio", "fecha_fin"], [(f"\"{campos[0]}\"", f"\"{campos[1]}\"", "NOW()", f"\"{campos[2]}\"")])
 
 
     # Ejecutar la instruccion
@@ -218,7 +219,7 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
     conexion = retorno_otros[2]
 
     if(retorno_otros[0] == 0): # Insercion correcta
-      retorno = (0, "Proyecto insertado en la base de datos.", conexion)
+      retorno = (0, "\nProyecto insertado en la base de datos.", conexion)
     
     else: # Insercion erronea
       retorno = (-1, retorno_otros[1], conexion) # Devolver el menasje de error devuelto
@@ -270,10 +271,10 @@ def borrar_proyecto(conexion, parametros_conexion):
       print(proyecto_a_texto)
 
       # Pedir confirmacion
-      confirmado = utilidades.pedir_confirmacion("¿Quiere borrar el proyecto?")
+      confirmado = utilidades.pedir_confirmacion("\n¿Quiere borrar el proyecto?")
 
       if(not confirmado): # El usuario no quiere borrar el proyecto
-        retorno = (-1, "Borrado abortado.", conexion)
+        retorno = (-1, "\nBorrado abortado.", conexion)
       
       else:
         # Crear la query para borrar
@@ -285,17 +286,12 @@ def borrar_proyecto(conexion, parametros_conexion):
         conexion = retorno_otros[2]
 
         if(retorno_otros[0] == 0): # Borrado correcto
-          retorno = (0, "Proyecto borrado de la base de datos", conexion)
+          retorno = (0, "\nProyecto borrado de la base de datos", conexion)
         
         else: # Borrado erroneo
           retorno = (-1, retorno_otros[1], conexion)
   
   return retorno
-
-
-
-
-
 
 
 # ######################################################################### #
@@ -402,8 +398,9 @@ def proyecto_a_texto(proyecto:tuple):
   else: # Hay descripcion
     pro_texto += f"\tDescripcion: {proyecto[1]}\n"
 
-  pro_texto += f"\tFecha de inicio: {proyecto[2]}\n"
-  pro_texto += f"\tFecha de fin: {proyecto[3]}\n"
+  # Cambiar fechas de dormato americano a europeo
+  pro_texto += f"\tFecha de inicio: {proyecto[2].strftime("%d-%m-%Y")}\n"
+  pro_texto += f"\tFecha de fin: {proyecto[3].strftime("%d-%m-%Y")}\n"
 
   if(proyecto[4] is None): # No hay departamento
     pro_texto += f"\tDepartamento: Sin departamento.\n"
