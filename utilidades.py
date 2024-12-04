@@ -42,7 +42,8 @@ def obtener_expresion_regular(clave:str):
   "departamento_descripcion":   ["[A-Z0-9.,;&\\-_ ]{0,60}"],
 
   "proyecto_nombre":      ["[A-Z0-9.,;&\\- ]{1,60}"],
-  "proyecto_descripcion": ["[A-Z0-9.,;&\\-_ ]{0,60}"]
+  "proyecto_descripcion": ["[A-Z0-9.,;&\\-_ ]{0,60}"],
+  "general_fecha": ["((0?[1-9])|([12][0-9])|(3[0-1]))-((1[0-2])|(0?[1-9]))-[0-9]{1,4}"]
   } # Diccionario que contiene las expresiones regulares para la validacion de
     # campos del programa.
     #  - La clave es un String (str), conteniento el nombre del campo a 
@@ -230,7 +231,9 @@ def validar_campo(campo:str, nombre_campo:str):
 
     if(matcher is not None): # El campo es valido
       # Comprobar si hay que realizar comprobaciones adicionales
-      if(len(caracteristicas) == 3): # Campo numerico
+      if(campo_t == "fecha"): # Si el campo es una fecha, validarla a parte
+        retorno = validar_fecha(campo)
+      elif(len(caracteristicas) == 3): # Campo numerico
         campo_num = float(campo) # Se realiza el casting a float por simplicidad,
         # Se puede comparar numeros decimales con numeros enteros.
 
