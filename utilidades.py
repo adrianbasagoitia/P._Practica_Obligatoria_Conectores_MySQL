@@ -44,7 +44,9 @@ def obtener_expresion_regular(clave:str):
 
   "proyecto_nombre":      ["[A-Z0-9.,;&\\- ]{1,60}"],
   "proyecto_descripcion": ["[A-Z0-9.,;&\\-_ ]{0,60}"],
-  "general_fecha": ["((0?[1-9])|([12][0-9])|(3[0-1]))-((1[0-2])|(0?[1-9]))-[0-9]{1,4}"]
+
+  "general_fecha": ["((0?[1-9])|([12][0-9])|(3[0-1]))-((1[0-2])|(0?[1-9]))-[0-9]{1,4}"],
+  "general_numero": ["[0-9]{1,9}"]
   } # Diccionario que contiene las expresiones regulares para la validacion de
     # campos del programa.
     #  - La clave es un String (str), conteniento el nombre del campo a 
