@@ -766,43 +766,43 @@ def query_select(nombre_tabla:str, columnas:list[tuple] = None, join:list[tuple]
       # Ej INNER JOIN DEPARTAMENTO ON EMPLEADO.DEPARTAMENTO = DEPARTAMENTO.ID 
   
 
-    ##### Where #####
-    # Estructura de la tupla de un where
-    # nombre_tabla | nombre_campo | condicion (<, >, =) | valor |
-    if(where is not None):
-      query += "\tWHERE\n" # Anyadir el where
-      for i in range(0, len(where)): # Recorrer la lista de condiciones del 
-        # where
-        # Anyadir el where
-        query += f"\t\t{where[i][0].upper()}.{where[i][1].upper()} {where[i][2].upper()} {where[i][3].upper()}"
+  ##### Where #####
+  # Estructura de la tupla de un where
+  # nombre_tabla | nombre_campo | condicion (<, >, =) | valor |
+  if(where is not None):
+    query += "\tWHERE\n" # Anyadir el where
+    for i in range(0, len(where)): # Recorrer la lista de condiciones del 
+      # where
+      # Anyadir el where
+      query += f"\t\t{where[i][0].upper()}.{where[i][1].upper()} {where[i][2].upper()} {where[i][3].upper()}"
 
-        if(i != len(where)-1): # Si no es la ultima clausula, anyadir el AND
-          query += " AND\n"
-        
-        else: # Si el la ultima linea, solo anyadir el salto de linea
-          query += "\n"
-    
-    # ##### Order By #####
-    # Estructura de una tupla de order by
-    # Nombre Tabla | Nombre columna | ASCendente o DESCendente
-    if(order_by is not None): # Si la query tiene que ordenarse de alguna manera
-      # Escribir Order By
-      query += "\tORDER BY\n"
-      for i in range(0, len(order_by)):
-        query += f"\t\t{order_by[i][0].upper()}.{order_by[i][1].upper()} {order_by[i][2].upper()}"
-
-        if(i != len(order_by)-1): # Si no es la ultima columna por la que 
-          # ordenar, anyadir una coma
-          query += ","
-
-        # Siempre al final de cada linea de order by anyadir un salto de linea
+      if(i != len(where)-1): # Si no es la ultima clausula, anyadir el AND
+        query += " AND\n"
+      
+      else: # Si el la ultima linea, solo anyadir el salto de linea
         query += "\n"
     
-    # ##### Limit #####
-    if(limit is not None):
-      query += f"\tLIMIT {limit}"
+  # ##### Order By #####
+  # Estructura de una tupla de order by
+  # Nombre Tabla | Nombre columna | ASCendente o DESCendente
+  if(order_by is not None): # Si la query tiene que ordenarse de alguna manera
+    # Escribir Order By
+    query += "\tORDER BY\n"
+    for i in range(0, len(order_by)):
+      query += f"\t\t{order_by[i][0].upper()}.{order_by[i][1].upper()} {order_by[i][2].upper()}"
+
+      if(i != len(order_by)-1): # Si no es la ultima columna por la que 
+        # ordenar, anyadir una coma
+        query += ","
+
+      # Siempre al final de cada linea de order by anyadir un salto de linea
+      query += "\n"
+  
+  # ##### Limit #####
+  if(limit is not None):
+    query += f"\tLIMIT {limit}"
     
-    # Al final de la query, siempre anyadir punto y coma
-    query += ";"
+  # Al final de la query, siempre anyadir punto y coma
+  query += ";"
 
   return (0, "Query para generar select escrita", query)
