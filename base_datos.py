@@ -187,12 +187,14 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
         Query a ejecutar. Ej: CREATE DATABASE, SELECT, DELETE, INSERT INTO,...
 
   Returns:
-      tuple: dos o tres posiciones:
+      tuple: tres o cuatro posiciones:
         - codigo de resultado (int): 
           0 en caso de ejecucion correcta, -1 en cualquier otro caso.
         - mensaje de ejecucion (str): 
           Mensaje para el usuario informando del resultado de la ejecucion 
           del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
         - contenido devuelto por la query (tuple, optional): 
           Tupla conteniendo las lineas afectadas por la query. Opcional.
   """
