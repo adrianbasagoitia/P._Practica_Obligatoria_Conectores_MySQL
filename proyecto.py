@@ -54,7 +54,7 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
 
     # Filtrar opciones
     if(entrada == "0"): # Salir
-      salir = utilidades.pedir_confirmacion("\n¿Quiere salir del programa?")
+      salir = utilidades.pedir_confirmacion("\n¿Quiere salir del submenu proyecto y volver al menu principal?")
 
       if(salir): # Si la salida esta confirmada
         print("\nAdios.")
@@ -63,16 +63,34 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
     
 
     elif(entrada == "1"): # Alta proyecto
+      print("\n"*2+"+"*60)
+      print("1 - Alta proyecto.")
       retorno_otros = alta_proyecto(conexion, parametros_conexion)
+
+      # Imprimir siempre el mensaje
       print(retorno_otros[1])
+
+      # Actualizar el valor de la conexion
+      conexion = retorno_otros[2]
       
 
     elif(entrada == "2"): # Baja proyecto
-      pass#baja_proyecto(conexion, parametros_conexion)
-    
+      print("\n"*2+"+"*60)
+      print("2 - Baja proyecto.")
+      retorno_otros = baja_proyecto(conexion, parametros_conexion)
+
+      # Imprimir siempre el mensaje
+      print(retorno_otros[1])
+
+      # Actualizar el valor de la conexion
+      conexion = retorno_otros[2]
+
 
     elif(entrada == "3"): # Buscar proyecto
+      print("\n"*2+"+"*60)
+      print("3 - Buscar proyecto.")
       retorno_otros = buscar_proyecto(conexion, parametros_conexion)
+
       # Imprimir siempre el mensaje
       print(retorno_otros[1])
 
@@ -81,16 +99,24 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
 
       if(retorno_otros[0] == 0 and len(retorno_otros) == 4): # Ejecucion 
         # correcta y con resultado
-        print(proyecto_a_texto(retorno_otros[3]))
+        print(proyecto_a_texto(conexion, parametros_conexion, retorno_otros[3]))
 
 
     elif(entrada == "4"): # Modificar proyecto
+      print("\n"*2+"+"*60)
+      print("4 - Modificar proyecto.")
       pass#modificar_proyecto(conexion, parametros_conexion)
     
 
-    elif(entrada == "3"): # Mostrar proyectos
-      pass#mostrar_proyecto(conexion, parametros_conexion)
-    
+    elif(entrada == "5"): # Mostrar proyectos
+      print("\n"*2+"+"*60)
+      print("5 - Mostrar proyectos.")
+      retorno_otros = mostrar_proyecto(conexion, parametros_conexion)
+      print(retorno_otros[1])
+
+      # Hay proyectos que imprimir
+      if(retorno_otros[0] == 0 and len(retorno_otros) == 4):
+        print(retorno_otros[3])
 
     else: # Opcion erronea
       print(f"\nERROR. La opcion \"{entrada}\" no es una entrada valida.")
@@ -172,12 +198,14 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
         Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
 
   Returns:
-      tuple: dos posiciones:
+      tuple: tres posiciones:
         - codigo de resultado (int): 
           0 en caso de ejecucion correcta, -1 en cualquier otro caso.
         - mensaje de ejecucion (str): 
           Mensaje para el usuario informando del resultado de la ejecucion 
           del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
   """  
   # Local variables
   nombre_campos:list[str] = ["proyecto_nombre", "proyecto_descripcion", "general_fecha"]
@@ -189,15 +217,20 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
   retorno:tuple # Tupla conteniendo la informacion necesaria para el 
   # retorno del metodo. 3 posiciones: Codigo ejecucion (0 - Correcta;
   # -1 incorrecta), mensaje de resultado de ejecucion, conexion.
+  departamentos:dict[int, str] # Diccionario con los departamentos dentro.
+  mensaje:str # Cadena de caracteres para pedir un campo.
+  dep_usu:int # Departamento introducido por el usuario
+  empleados:dict[int, str] # Diccionario con los empleados de un departamento 
+    # dentro
+  emp_usu:str # Empleado introducido por el usuario.
 
 
   # Local code
-  # Pedir los campos
+  # ##### Pedir los campos #####
   while(indice < len(nombre_campos) and continuar):
     retorno_otros = utilidades.pedir_campo(peticiones_campos(indice)[2], nombre_campos[indice])
 
-
-    if(retorno_otros[0] == -1):
+    if(retorno_otros[0] == -1): # Si la ejecucion es erronea
       retorno = (-1, retorno_otros[1], conexion) # Construir retorno de ejecucion
       
       # Terminar la ejecucion del bucle
@@ -208,28 +241,90 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
       indice += 1 # Pedir el siguiente campo
   
   if(continuar): # Todos los campos pedidos son validos y han sido anyadidos
-    # Hacer la query
-    retorno_otros = query.query_insert_into("proyecto", ["nombre", "descripcion", "fecha_inicio", "fecha_fin"], [(f"\"{campos[0]}\"", f"\"{campos[1]}\"", "NOW()", f"\"{campos[2]}\"")])
+    # ##### Pedir departamento #####
+    retorno_otros = departamentos_a_diccionario(conexion, parametros_conexion)
 
-
-    # Ejecutar la instruccion
-    retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
-    
     # Actualizar el valor de la conexion
     conexion = retorno_otros[2]
 
-    if(retorno_otros[0] == 0): # Insercion correcta
-      retorno = (0, "\nProyecto insertado en la base de datos.", conexion)
+    if(retorno_otros[3] == {}): # No hay departamentos
+      retorno = (-1, "No hay departamentos. Sin un departamento un proyecto no puede ser creado.", conexion)
     
-    else: # Insercion erronea
-      retorno = (-1, retorno_otros[1], conexion) # Devolver el menasje de error devuelto
-        # de la ejecucion de la instruccion
+    else: # Hay departamentos
+      # Asignar departamentos a variable
+      departamentos = retorno_otros[3]
+
+      mensaje = "\nDepartamentos:\n"
+      for k in departamentos.keys(): # Almacenar los departamentos en una 
+        # cadena de caracteres
+        mensaje += f"\t{k} - {departamentos[k]}\n"
+      
+      mensaje += "\nIntroduzca el ID del departamento al que quiere asignar el proyecto"
+      retorno_otros = utilidades.pedir_campo(mensaje, "general_numero")
+
+      if(retorno_otros[0] == -1): # Peticion erronea
+        retorno = (-1, retorno_otros[1])
+      
+      else: # Peticion correcta
+        dep_usu = int(retorno_otros[2]) # Casteo sin consecuencias, es un numero valido
+        if(dep_usu not in departamentos.keys()): # Departamento incorrecto
+          retorno = (-1, "\nDepartamento erroneo. Cancelando operacion", conexion)
+        
+        else: # Departamento correcto
+          print(f"\nDepartamento {departamentos[dep_usu]} asignado.")
+
+          # ##### Pedir el empleado responsable. #####
+          retorno_otros = empleados_departamento_a_diccionario(conexion, parametros_conexion, dep_usu)
+
+          # Actualizar el valor de la conexion
+          conexion = retorno_otros[2]
+
+          if(retorno_otros[3] == {}): # No hay empleados en el departamento
+            retorno = (-1, "\nNo hay empleados. Sin un responsable un proyecto no puede ser creado.", conexion)
+          
+          else: # Hay empleados en el departamento
+            # Asignar empleados a variable
+            empleados = retorno_otros[3]
+
+            mensaje = "\nEmpleados:\n"
+            for e in empleados.keys(): # Almacenar los empleados en una 
+              # cadena de caracteres
+              mensaje += f"{e} - {empleados[e]}\n"
+            mensaje += "\nIntroduzca el ID del empleado que quiere asignar como responsable del proyecto"
+            retorno_otros = utilidades.pedir_campo(mensaje, "general_numero")
+
+            if(retorno_otros[0] == -1): # Peticion erronea
+              retorno = (-1, retorno_otros[1])
+
+            else: # Peticion correcta
+              emp_usu = int(retorno_otros[2]) # Casteo sin consecuencias, es un numero valido
+              if(emp_usu not in empleados.keys()): # Empleado incorrecto
+                retorno = (-1, "\nEmpleado erroneo. Cancelando operacion", conexion)
+              
+              else: # Empleado correcto
+                print(f"\nEmpleado {departamentos[dep_usu]} designado como responsable.")
+
+                # Hacer la query
+                retorno_otros = query.query_insert_into("proyecto", ["nombre", "descripcion", "fecha_inicio", "fecha_fin", "departamento", "responsable"], [(f"\"{campos[0]}\"", f"\"{campos[1]}\"", "NOW()", f"\"{campos[2]}\"", f"{dep_usu}", f"{emp_usu}")])
+
+                # Ejecutar la instruccion
+                retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+                
+                # Actualizar el valor de la conexion
+                conexion = retorno_otros[2]
+
+                if(retorno_otros[0] == 0): # Insercion correcta
+                  retorno = (0, "\nProyecto insertado en la base de datos.", conexion)
+                
+                else: # Insercion erronea
+                  retorno = (-1, retorno_otros[1], conexion) # Devolver el menasje de error devuelto
+                    # de la ejecucion de la instruccion
   
   return retorno
 
 
 # ######################################################################### #
-def borrar_proyecto(conexion, parametros_conexion):
+def baja_proyecto(conexion, parametros_conexion):
   """
   Borra un proyecto de la base de datos.
 
@@ -237,8 +332,21 @@ def borrar_proyecto(conexion, parametros_conexion):
   En caso de obtenerla, intenta borrarlo de la base de datos.
 
   Args:
-      conexion (_type_): _description_
-      parametros_conexion (_type_): _description_
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
   """  
   # Local variables
   retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
@@ -265,10 +373,10 @@ def borrar_proyecto(conexion, parametros_conexion):
     
     else: # Hay proyecto
       # Obtener el proyecto formateado
-      proyecto_a_texto = proyecto_a_texto(retorno_otros[3])
+      proyecto_a_textoT = proyecto_a_texto(conexion, parametros_conexion, retorno_otros[3])
 
       # Imprimir el proyecto
-      print(proyecto_a_texto)
+      print(proyecto_a_textoT)
 
       # Pedir confirmacion
       confirmado = utilidades.pedir_confirmacion("\n¿Quiere borrar el proyecto?")
@@ -312,16 +420,18 @@ def buscar_proyecto(conexion, parametros_conexion:tuple):
         Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
 
   Returns:
-      tuple: dos o tres posiciones:
+      tuple: tres o cuatro posiciones:
         - codigo de resultado (int): 
           0 en caso de ejecucion correcta, -1 en cualquier otro caso.
         - mensaje de ejecucion (str): 
           Mensaje para el usuario informando del resultado de la ejecucion 
           del metodo.
-        - proyecto_resultado (tuple):
+        - conexion (Connection):
+          Conexion actual a la base de datos.
+        - proyecto_resultado (tuple, optional):
           Tupla conteniendo el proyecto buscado. Contiene el nombre del 
           proyecto, su descripcion, la fecha de inicio, la fecha de fin,
-          el nmobre del departamento responsable y el empleado responsable
+          el nombre del departamento responsable y el empleado responsable
           del proyecto.
   """  
   # Local variables
@@ -340,7 +450,7 @@ def buscar_proyecto(conexion, parametros_conexion:tuple):
       retorno = (-1, retorno_otros[1], conexion) # Construir retorno de ejecucion
   
   else: # Campo valido
-    retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "nombre"), ("empleado", "nombre")], [("left join", "departamento", "departamento", "id"), ("left join", "empleado", "responsable", "id")], [("proyecto", "nombre", "=", f"\"{retorno_otros[2]}\"")])
+    retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "nombre"), ("empleado", "nombre")], [("left join", "departamento", "proyecto", "departamento", "id"), ("left join", "empleado", "proyecto", "responsable", "id")], [("proyecto", "nombre", "=", f"\"{retorno_otros[2]}\"")])
 
     # Ejecutar la query
     retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
@@ -362,7 +472,95 @@ def buscar_proyecto(conexion, parametros_conexion:tuple):
   
 
 # ######################################################################### #
-def proyecto_a_texto(proyecto:tuple):
+def mostrar_proyecto(conexion, parametros_conexion:tuple):
+  """
+  Crea una cadena de caracteres con la informacion de todos los proyectos.
+
+  Realiza una query a la base de datos, y obtiene todos los proyectos 
+  almacenados. Posteriormente uno a uno va pidiendo que se escriban en una 
+  cadena de caracteres incluyendo los empleados que trabajan en los mismos.
+
+  Si no hay ningun proyecto, devuelve un mensaje informativo.
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+  Returns:
+      tuple: tres o cuatro posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
+        - proyectos (str, optional):
+          Cadena de caracteres, conteniendo la informacion de todos los 
+          proyectos y los empleados que trabajan en ellos. Es opcional.
+  """  
+  # Local variables
+  retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 3 o 4 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion, conexion, 
+  # proyectos en texto (opcional).
+  proyectos_lista:list[tuple] = None # Lista para almacenar los proyectos leidos
+    # de la base de datos.
+  proyectos:str = "" # Contiene la informacion de los proyectos en una cadena 
+    # de caracteres.
+  errores:int = 0 # Numero de proyectos cuya lectura ha sido erronea.
+
+
+  # Local code
+  # Obtener la query para seleccionar todos los proyectos
+  retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "nombre"), ("empleado", "nombre")], [("left join", "departamento", "proyecto", "responsable", "id"), ("left join", "empleado", "proyecto", "responsable", "id")])
+
+  # Buscar todos los proyectos
+  retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+  # Actualizar el valor de la conexion
+  conexion = retorno_otros[2]
+
+  if(retorno_otros[0] != 0): # Ejecucion erronea
+    retorno = (-1, retorno_otros[1], conexion)
+  
+  else: # Se ha podido hacer la query
+    if(len(retorno_otros) == 3): # No hay proyectos
+      retorno = (0, "\nNo hay proyectos que mostrar.", conexion)
+    
+    else: # Hay proyectos que mostrar
+      # Guardar los proyectos en una variable
+      proyectos_lista = retorno_otros[3]
+
+      # Recorrer la lista e ir llamando a proyecto_a_texto
+      for i in proyectos_lista:
+        retorno_otros = proyecto_a_texto(conexion, parametros_conexion, i)
+
+        # Actualizar el valor de la conexion
+        conexion = retorno_otros[2]
+
+        if(retorno_otros[0] == 0): # Proyecto a texto creado correctamente
+          proyectos += retorno_otros[3]
+        
+        else: # Lectura erronea, almacenar el numero
+          errores += 1
+      
+      # Al acabar el for, si hay algun proyecto erroneo, anyadir al final el 
+      # mensaje de error.
+      if(errores != 0):
+        proyectos += f"\nSe ha producio un error en la lectura de {errores}proyecto/s."
+      
+      retorno = (0, "Proyectos escritos en texto", conexion, proyectos)
+  
+  return retorno
+
+
+# ######################################################################### #
+def proyecto_a_texto(conexion, parametros_conexion:tuple, proyecto:tuple):
   """
   Escribe los datos de un proyecto a una cadena de caracteres.
 
@@ -374,6 +572,12 @@ def proyecto_a_texto(proyecto:tuple):
   valor "amigable" para el usuario como: "Sin Descripcion" o "Sin responsable."
 
   Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
       proyecto (tuple):
         Tupla obtenida de una query SELECT a la base de datos. Consta de 6
         posiciones: Nombre, Descripcion, Fecha Inicio, Fecha Fin, Departamento
@@ -386,6 +590,9 @@ def proyecto_a_texto(proyecto:tuple):
   """  
   # Local variables
   pro_texto:str = "" # Cadena de texto conteniendo el proyecto
+  empleados:tuple = None # Retorno de la consulta a la base de datos sobre la 
+    # tabla empleado_proyecto
+  queryT:tuple = None # Query para obtener los empleados
 
   # Local code
   pro_texto += "\nProyecto:\n"
@@ -399,8 +606,8 @@ def proyecto_a_texto(proyecto:tuple):
     pro_texto += f"\tDescripcion: {proyecto[1]}\n"
 
   # Cambiar fechas de dormato americano a europeo
-  pro_texto += f"\tFecha de inicio: {proyecto[2].strftime("%d-%m-%Y")}\n"
-  pro_texto += f"\tFecha de fin: {proyecto[3].strftime("%d-%m-%Y")}\n"
+  pro_texto += f"\tFecha de inicio: {proyecto[2].strftime('%d-%m-%Y')}\n"
+  pro_texto += f"\tFecha de fin: {proyecto[3].strftime('%d-%m-%Y')}\n"
 
   if(proyecto[4] is None): # No hay departamento
     pro_texto += f"\tDepartamento: Sin departamento.\n"
@@ -412,6 +619,188 @@ def proyecto_a_texto(proyecto:tuple):
     pro_texto += f"\tResponsable: Sin responsable.\n"
   
   else: # Hay un departamento responsable
-    pro_texto += f"\tResponsable: {proyecto[4]}\n"
+    pro_texto += f"\tResponsable: {proyecto[5]}\n"
+
+
+  # Empleados que trabajan en un proyecto
+  # Crear la query
+  queryT = query.query_select("proyecto", [("empleado", "id"),("empleado", "nombre")], [("left join", "empleado_proyecto", "proyecto", "id", "id_proyecto"), ("left join", "empleado", "empleado_proyecto", "id_empleado", "id")], [("proyecto", "nombre", "=", f"\"{proyecto[0].upper()}\"")])
   
-  return pro_texto
+
+  # Ejecutar la query
+  empleados = base_datos.ejecutar_instruccion(conexion, parametros_conexion, queryT[2])
+
+  # Actualizar el valor de la conexion
+  conexion = empleados[2]
+
+  # Anyadir la cabecera de empleados
+  pro_texto += "\n\tEmpleados:\n"
+
+  if(empleados[0] != 0): # Error al ejecutar
+    retorno = (-1, "\nError al leer los empleados de la base de datos.")
+  
+  else: # Se han leido correctamente
+    # Si no hay empleados
+    if(empleados[3] == ((None, None),)):
+      pro_texto+= "\t\tNo hay empleados trabajando en el proyecto.\n"
+    
+    else: # Si hay emppleados
+      for empleado in empleados[3]:
+        pro_texto += f"\t\t{empleado[0]} - {empleado[1].upper()}\n"
+
+      pro_texto+= "\n"
+
+    retorno = (0, "Proyecto escrito en una cadena de caracteres", conexion, pro_texto)
+  
+  return retorno
+
+
+# ######################################################################### #
+def departamentos_a_diccionario(conexion, parametros_conexion:tuple):
+  """
+  Busca los departamentos presentes en el sistema, y los almacena en un
+  diccionario.
+
+  Busca en la base de datos, el ID del departamento, y su nombre.
+  Si los puede obtener, almacena el ID como la clave del diccionario,
+  y el nombre como el valor.
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+  Returns:
+      tuple: cuatro posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
+        - departamentos (dict[int, str]):
+          Diccionario que contiene los departamentos en su interior, el ID como
+          clave, y el nombre como valor. En caso de no existir departamentos o 
+          de producirse un error, el diccionario es vacio.
+  """  
+  # Local variables
+  retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 3 o 4 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion, conexion, 
+  # diccionario de departamentos.
+  dep_dict:dict[int, str] = {} # Diccionario conteniendo los departamentos del
+  # sistema. Clave: int (ID); Valor: str (Nombre).
+
+  # Local code
+  # Hacer la query para obtener el nombre de todos los departamentos
+  retorno_otros = query.query_select("departamento", [("departamento", "id"), ("departamento", "nombre")])
+
+  # Ejecutar la query
+  retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+  # Actualizar el valor de la conexion
+  conexion = retorno_otros[2]
+
+  if(retorno_otros[0] != 0): # No se pueden leer los departamentos en la base
+    # de datos
+    retorno = (-1, "\nError al leer los departamentos en la base de datos. Cancelando creacion de nuevo proyecto.", conexion, dep_dict)
+  
+  else: # Se han podido leer los departamentos
+    # No hay departamentos
+    if(len(retorno_otros) != 4): # No hay departamentos
+      retorno = (0, "\nNo hay departamentos", conexion, dep_dict)
+    
+    else: # Hay departamentos
+      # Comprobar que sea distinto de algo vacio
+      if(retorno_otros[3] == ((None, None),)): # No hay departamentos
+        retorno = (0, "\nNo hay departamentos", conexion, dep_dict)
+      
+      else: # Hay departamentos
+        # Recorrer la lista de tuplas
+        for i in retorno_otros[3]:
+          dep_dict[i[0]] = ""+i[1]
+        
+        retorno = (0, "\nDepartamentos insertados en diccionario", conexion, dep_dict)
+
+  return retorno
+
+
+# ######################################################################### #
+def empleados_departamento_a_diccionario(conexion, parametros_conexion:tuple, id:int):
+  """
+  Busca los empleados pertenecicnetes a un depertamentos del sistema, y los 
+  almacena en un diccionario.
+
+  Busca en la base de datos, el ID del empleado, y su nombre, que trabajan en
+  un departamento.
+  Si los puede obtener, almacena el ID como la clave del diccionario,
+  y el nombre como el valor.
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+  Returns:
+      tuple: cuatro posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
+        - empleados (dict[int, str]):
+          Diccionario que contiene los empleados en su interior, el ID como
+          clave, y el nombre como valor. En caso de no existir empleados o 
+          de producirse un error, el diccionario es vacio.
+  """  
+  # Local variables
+  retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 4 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion, conexion, 
+  # diccionario de empleados.
+  emp_dict:dict[int, str] = {} # Diccionario conteniendo los empleados del
+  # pertenecientes a un departamento del sistema. Clave: int (ID); Valor: str 
+  # (Nombre).
+
+
+  # Local code
+  # Hacer la query para obtener el nombre de todos los departamentos
+  retorno_otros = query.query_select("empleado", [("empleado", "id"), ("empleado", "nombre")], None, [("empleado", "departamento", "=", f"{1}")])
+
+  # Ejecutar la query
+  retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+  # Actualizar el valor de la conexion
+  conexion = retorno_otros[2]
+
+  if(retorno_otros[0] != 0): # No se pueden leer los departamentos en la base
+    # de datos
+    retorno = (-1, "\nError al leer los empleados en la base de datos. Cancelando creacion de nuevo proyecto.", conexion, emp_dict)
+  
+  else: # Se han podido leer los empleados
+    # No hay empleados
+    if(len(retorno_otros) != 4): # No hay departamentos
+      retorno = (0, "\nNo hay empleados.", conexion, emp_dict)
+    
+    else: # Hay empleados
+      # Comprobar que sea distinto de algo vacio
+      if(retorno_otros[3] == ((None, None),)): # No hay empleados
+        retorno = (0, "\nNo hay empleados.", conexion, emp_dict)
+      
+      else: # Hay departamentos
+        # Recorrer la lista de tuplas
+        for i in retorno_otros[3]:
+          emp_dict[i[0]] = ""+i[1]
+        
+        retorno = (0, "\nEmpleados insertados en diccionario.", conexion, emp_dict)
+    
+  return retorno
