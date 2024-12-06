@@ -767,19 +767,20 @@ def query_select(nombre_tabla:str, columnas:list[tuple] = None, join:list[tuple]
   
 
     ##### Where #####
-    query += "\tWHERE\n" # Anyadir el where
-
     # Estructura de la tupla de un where
     # nombre_tabla | nombre_campo | condicion (<, >, =) | valor |
-    for i in range(0, len(where)): # Recorrer la lista de condiciones del where
-      # Anyadir el where
-      query += f"\t\t{where[i][0].upper()}.{where[i][1].upper()} {where[i][2].upper()} {where[i][3].upper()}"
+    if(where is not None):
+      query += "\tWHERE\n" # Anyadir el where
+      for i in range(0, len(where)): # Recorrer la lista de condiciones del 
+        # where
+        # Anyadir el where
+        query += f"\t\t{where[i][0].upper()}.{where[i][1].upper()} {where[i][2].upper()} {where[i][3].upper()}"
 
-      if(i != len(where)-1): # Si no es la ultima clausula, anyadir el AND
-        query += " AND\n"
-      
-      else: # Si el la ultima linea, solo anyadir el salto de linea
-        query += "\n"
+        if(i != len(where)-1): # Si no es la ultima clausula, anyadir el AND
+          query += " AND\n"
+        
+        else: # Si el la ultima linea, solo anyadir el salto de linea
+          query += "\n"
     
     # ##### Order By #####
     # Estructura de una tupla de order by
