@@ -99,7 +99,16 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
 
       if(retorno_otros[0] == 0 and len(retorno_otros) == 4): # Ejecucion 
         # correcta y con resultado
-        print(proyecto_a_texto(conexion, parametros_conexion, retorno_otros[3]))
+        retorno_otros = proyecto_a_texto(conexion, parametros_conexion, retorno_otros[3])
+
+        # Actualizar el valor de la conexion
+        conexion = retorno_otros[2]
+
+        # Imprimir siempre el mensaje
+        print(retorno_otros[1])
+
+        if(retorno_otros[0] == 0):
+          print(retorno_otros[3])
 
 
     elif(entrada == "4"): # Modificar proyecto
@@ -246,6 +255,13 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
       campos.append(retorno_otros[2]) # anyadir a la lista de campos validos
       indice += 1 # Pedir el siguiente campo
   
+  if(continuar): # Comprobar que la fecha de fin sea igual o mayor a la actual
+    if(datetime.datetime.strptime(campos[2], "%Y-%m-%d").date() < datetime.datetime.now().date()):
+      continuar = False
+
+      retorno = (-1, "\nFecha invalida. La fecha debe ser igual o mayor a la actual.", conexion)
+
+
   if(continuar): # Todos los campos pedidos son validos y han sido anyadidos
     # ##### Pedir departamento #####
     retorno_otros = departamentos_a_diccionario(conexion, parametros_conexion)
@@ -381,8 +397,11 @@ def baja_proyecto(conexion, parametros_conexion):
       # Obtener el proyecto formateado
       proyecto_a_textoT = proyecto_a_texto(conexion, parametros_conexion, retorno_otros[3])
 
+      # Actualizar el valor de la conexion
+      conexion = proyecto_a_textoT[2]
+
       # Imprimir el proyecto
-      print(proyecto_a_textoT)
+      print(proyecto_a_textoT[3])
 
       # Pedir confirmacion
       confirmado = utilidades.pedir_confirmacion("\n¿Quiere borrar el proyecto?")
@@ -456,10 +475,11 @@ def buscar_proyecto(conexion, parametros_conexion:tuple):
       retorno = (-1, retorno_otros[1], conexion) # Construir retorno de ejecucion
   
   else: # Campo valido
-    retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "nombre"), ("empleado", "nombre")], [("left join", "departamento", "proyecto", "departamento", "id"), ("left join", "empleado", "proyecto", "responsable", "id")], [("proyecto", "nombre", "=", f"\"{retorno_otros[2]}\"")])
+    retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "id"), ("departamento", "nombre"), ("empleado", "id"), ("empleado", "nombre")], [("left join", "departamento", "proyecto", "departamento", "id"), ("left join", "empleado", "proyecto", "responsable", "id")], [("proyecto", "nombre", "=", f"\"{retorno_otros[2]}\"")])
 
     # Ejecutar la query
     retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
     # Actualizar el valor de la conexion
     conexion = retorno_otros[2]
 
@@ -488,6 +508,11 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
     # en texto
   opcion:str # Opcion introducida por el usuario
   nuevo_campo:str # Nuevo campo para modificar el anterior
+  departamentos:dict[int, str] # Diccionario con los departamentos del sistema 
+    #ID: Nombre
+  empleados:dict[int, str] # Diccionario con los empleados del sistema que 
+    # pertenecen a un departamento en concreto ID: Nombre.
+
 
   # Local code
   # Buscar un proyecto
@@ -539,9 +564,8 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
           print("1 - Nombre.")
           print("2 - Descripcion.")
           print("3 - Fecha Fin.")
-          print("4 - Departamento.")
-          print("5 - Responsable.")
-          print("6 - Lista empleados.")
+          print("4 - Responsable.")
+          print("5 - Lista empleados.")
           print("0 - Salir.")
 
           entrada = input(f"\nIntroduzca el numero de la opcion que desea realizar; [{intentos} restantes]: ")
@@ -659,7 +683,34 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
                   
                   else:
                     retorno = (0, f"\nFecha de fin de proyecto cambiada de {proyecto[3].strftime("%d-%m-%Y")} a {nuevo_campo.strftime("%d-%m-%Y")}.", conexion)
+
+
+          # ##### CAMBIAR RESPONSABLE #####
+          elif(entrada == "4"):
+            valido = True
             
+            # Obtener los departamentos en un diccionario
+            retorno_otros = empleados_departamento_a_diccionario(conexion, parametros_conexion, )
+
+            # Actualizar el valor de la conexion
+            conexion = retorno_otros[2]
+
+            if(retorno_otros[0] == -1): # Ejecucion erronea
+              retorno = (-1, "\nError al obtener los departamentos del sistema.", conexion)
+            
+            else: # Ejecucion correcta
+              # SIEMPRE, tiene que existor al menos el empleado asignado como 
+              # respo nsable a este proyecto.
+              departamentos = retorno_otros[3]
+
+              # Obtener el id del empleado responsable actual
+
+
+              # Borrar el departamento actual
+
+
+
+
 
 
 
@@ -725,7 +776,7 @@ def mostrar_proyecto(conexion, parametros_conexion:tuple):
 
   # Local code
   # Obtener la query para seleccionar todos los proyectos
-  retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "nombre"), ("empleado", "nombre")], [("left join", "departamento", "proyecto", "responsable", "id"), ("left join", "empleado", "proyecto", "responsable", "id")])
+  retorno_otros = query.query_select("proyecto", [("proyecto", "nombre"), ("proyecto", "descripcion"), ("proyecto", "fecha_inicio"), ("proyecto", "fecha_fin"), ("departamento", "id"), ("departamento", "nombre"), ("empleado", "id"), ("empleado", "nombre")], [("left join", "departamento", "proyecto", "responsable", "id"), ("left join", "empleado", "proyecto", "responsable", "id")])
 
   # Buscar todos los proyectos
   retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
@@ -821,18 +872,18 @@ def proyecto_a_texto(conexion, parametros_conexion:tuple, proyecto:tuple):
     pro_texto += f"\tDepartamento: Sin departamento.\n"
 
   else: # Hay departamento
-    pro_texto += f"\tDepartamento: {proyecto[4]}\n"
+    pro_texto += f"\tDepartamento: {proyecto[4]} - {proyecto[5]}\n"
 
-  if(proyecto[5] is None): # No hay un empleado responsabñe
+  if(proyecto[6] is None): # No hay un empleado responsabñe
     pro_texto += f"\tResponsable: Sin responsable.\n"
   
   else: # Hay un departamento responsable
-    pro_texto += f"\tResponsable: {proyecto[5]}\n"
+    pro_texto += f"\tResponsable: {proyecto[6]} - {proyecto[7]}\n"
 
 
   # Empleados que trabajan en un proyecto
   # Crear la query
-  queryT = query.query_select("proyecto", [("empleado", "id"),("empleado", "nombre")], [("left join", "empleado_proyecto", "proyecto", "id", "id_proyecto"), ("left join", "empleado", "empleado_proyecto", "id_empleado", "id")], [("proyecto", "nombre", "=", f"\"{proyecto[0].upper()}\"")])
+  queryT = query.query_select("proyecto", [("empleado", "id"), ("empleado", "nombre"), ("departamento", "nombre")], [("left join", "empleado_proyecto", "proyecto", "id", "id_proyecto"), ("left join", "empleado", "empleado_proyecto", "id_empleado", "id"), ("left join", "departamento", "empleado", "departamento", "id")], [("proyecto", "nombre", "=", f"\"{proyecto[0].upper()}\"")])
   
 
   # Ejecutar la query
@@ -849,12 +900,12 @@ def proyecto_a_texto(conexion, parametros_conexion:tuple, proyecto:tuple):
   
   else: # Se han leido correctamente
     # Si no hay empleados
-    if(empleados[3] == ((None, None),)):
+    if(empleados[3] == ((None, None, None),)):
       pro_texto+= "\t\tNo hay empleados trabajando en el proyecto.\n"
     
     else: # Si hay emppleados
       for empleado in empleados[3]:
-        pro_texto += f"\t\t{empleado[0]} - {empleado[1].upper()}\n"
+        pro_texto += f"\t\t{empleado[0]} - {empleado[1].upper()} - {empleado[2].upper()}\n"
 
       pro_texto+= "\n"
 
