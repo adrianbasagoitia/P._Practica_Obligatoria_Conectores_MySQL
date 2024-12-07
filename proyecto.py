@@ -567,7 +567,8 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
           print("2 - Descripcion.")
           print("3 - Fecha Fin.")
           print("4 - Responsable.")
-          print("5 - Lista empleados.")
+          print("5 - Anyadir empleados.")
+          print("6 - Eliminar empleados.")
           print("0 - Salir.")
 
           opcion = input(f"\nIntroduzca el numero de la opcion que desea realizar; [{intentos} restantes]: ")
@@ -772,6 +773,161 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
                         else: # Empleado borrado
                           retorno = (0, f"\nResponsable del proyecto {proyecto[0]} cambiado de {proyecto[7]} a {empleados[nuevo_campo]}.", conexion)
 
+
+          # ##### Anyadir empleados #####
+          elif(opcion == "5"):
+            valido = True
+            #retorno = anyadir_empleados(conexion, parametros_conexion)
+            pass
+
+          # ##### Eliminar empleados #####
+          elif(opcion == "6"):
+            valido = True
+            retorno = eliminar_empleados(conexion, parametros_conexion, proyecto)
+
+  return retorno
+
+
+# ######################################################################### #
+def eliminar_empleados(conexion, parametros_conexion:tuple, proyecto:tuple):
+  """
+  Elimina empleados de un proyecto.
+
+  Dado un proyecto dentro de una tupla, y leido de la base de datos, se obtienen
+  los empleados que trabajan en el mismo mediante empleados_a_diccionario.
+
+  Posteriormente, pide al usuario el identificador del empleado que quiere 
+  eliminar del proyecto. Tanto si es correcto como sino, pide confirmacion para
+  terminar o continuar.
+
+  En el caso de que se decida terminar y existan empleados a borrar, se llama a 
+  la creacion y ejecucion de una query.
+
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+      proyecto (tuple): 
+        Tupla conteniendo la informacion de un proyecto leida desde la base de 
+        datos: Nombre, Descripcion, Fecha_inicio, Fecha_fin, ID_departamento, 
+        nombre_departamento, ID_responsable, nombre responsable.
+
+
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
+  """  
+  # Local variables
+  retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 3 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion, conexion.
+  emp_dict:dict[int, str] # Diccionario conteniendo los empleados del
+  # pertenecientes a un proyecto del sistema. Clave: int (ID); Valor: str 
+  # (Nombre).
+  emp_borrar:dict[int, str] = {} # Empleados a borrar del proyecto
+  mensaje:str # Mensjaje para imprimir al usuario
+  continuar:bool = True # Indica si se deben seguir pidiendo empleados a 
+    # eliminar del proyecto
+  id_usuario:int # Identificador introducido por el usario
+
+  # Local code
+  # Obtener los empleados del proyecto
+  retorno_otros = query.query_select("proyecto", [("empleado", "id"), ("empleado", "nombre")], [("left join", "empleado_proyecto", "proyecto", "id", "id_proyecto"), ("left join", "empleado", "empleado_proyecto", "id_empleado", "id"), ("left join", "departamento", "empleado", "departamento", "id")], [("proyecto", "nombre", "=", f"\"{proyecto[0].upper()}\"")])
+
+  # Obtener los empleados del proyecto en un diccionario
+  retorno_otros = empleados_a_diccionario(conexion, parametros_conexion, retorno_otros[2])
+  
+  # Actualizar el valor de la conexion
+  conexion = retorno_otros[2]
+
+  # Ejecucion incorrecta
+  if(retorno_otros[0] != 0):
+    retorno = (-1, retorno_otros[1], conexion)
+  
+  else: # Ejecucion correcta
+    # almacenar los empleados en una variable
+    emp_dict = retorno_otros[3]
+    
+    # Comprobar si hay empleados
+    if(emp_dict == {}):
+      retorno = (0, "\nNo hay empleados que eliminar del proyecto.", conexion)
+    
+    else: # Hay empleados
+      while(continuar):
+        mensaje = f"Empleados del proyecto {proyecto[0]}:\n"
+        for k in emp_dict.keys():
+          mensaje += f"{k} - {emp_dict[k]}\n"
+        
+        mensaje += "\nIntroduzca el identificador del empleado que desea borrar del proyecto"
+
+        retorno_otros = utilidades.pedir_campo(mensaje, "general_numero")
+
+        
+        if(retorno_otros[0] != 0): # Peticion erronea
+          # Imprimir mensaje
+          print(retorno_otros[1])
+
+        else: # Peticion correcta
+          if(retorno_otros[2] == "-1"): # El usuario cancela la operacion
+            continuar = False
+          
+          else: # Identificador a comprobar
+            id_usuario = int(retorno_otros[2])
+
+            if(id_usuario in emp_dict.keys()): # Si es un identificador 
+              # valido
+              # Introducir en el diccionario a borrar
+              emp_borrar[id_usuario] = emp_dict[id_usuario]
+              # Borrar del diccionario de presentes
+              del(emp_dict[id_usuario])
+            
+            else: # No es un identificador correcto
+              print(f"\nEl identificador {id_usuario} no es correcto.")
+        
+        if(continuar): # Si el usuario no cancela la operacion
+          continuar = utilidades.pedir_confirmacion("¿Quiere seguir eliminando usuarios?")
+      
+      # Salir del while
+      if(emp_borrar == {}): # Si no hay empelados a borrar
+        retorno = (0, f"\nNo se han borrado empleados del proyecto {proyecto[0]}", conexion)
+      
+      else: # Hay empleados que borrar
+        # ID de empleados a borrar en str
+        mensaje = "("
+        for k in emp_borrar.keys():
+          mensaje += f"{k},"
+
+        # Eliminar la ultima coma
+        mensaje = mensaje[0:-1]
+
+        mensaje += ")"
+
+        # Crear la query
+        retorno_otros = query.query_delete_from("empleado_proyecto", [("proyecto", "nombre", "=", f"\"{proyecto[0]}\""), ("empleado_proyecto", "id_empleado", "IN", f"{mensaje}")], [("left join", "proyecto", "id_proyecto", "id")])
+
+        print(retorno_otros[2])
+
+        retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+        # Actualizar el valor de la conexion
+        conexion = retorno_otros[2]      
+
+        if(retorno_otros[0] != 0): # Ejecucion erronea
+          retorno = (-1, retorno_otros[1], conexion)
+        
+        else: # Ejecucion correcta
+          retorno = (0, "\nEmpleados eliminados del proyecto.", conexion)
 
   return retorno
 
@@ -1087,13 +1243,86 @@ def empleados_departamento_a_diccionario(conexion, parametros_conexion:tuple, id
   # Actualizar el valor de la conexion
   conexion = retorno_otros[2]
 
-  if(retorno_otros[0] != 0): # No se pueden leer los departamentos en la base
+  if(retorno_otros[0] != 0): # No se pueden leer los empleados en la base
     # de datos
     retorno = (-1, "\nError al leer los empleados en la base de datos. Cancelando creacion de nuevo proyecto.", conexion, emp_dict)
   
   else: # Se han podido leer los empleados
     # No hay empleados
     if(len(retorno_otros) != 4): # No hay departamentos
+      retorno = (0, "\nNo hay empleados.", conexion, emp_dict)
+    
+    else: # Hay empleados
+      # Comprobar que sea distinto de algo vacio
+      if(retorno_otros[3] == ((None, None),)): # No hay empleados
+        retorno = (0, "\nNo hay empleados.", conexion, emp_dict)
+      
+      else: # Hay departamentos
+        # Recorrer la lista de tuplas
+        for i in retorno_otros[3]:
+          emp_dict[i[0]] = ""+i[1]
+        
+        retorno = (0, "\nEmpleados insertados en diccionario.", conexion, emp_dict)
+    
+  return retorno
+
+
+# ######################################################################### #
+def empleados_a_diccionario(conexion, parametros_conexion:tuple, query:str):
+  """
+  Dada una query, se introducen los empelados resultantes de la ejecucion de
+  la misma en la base de datos en un diccionario.
+
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+      query (str): Consulta a ejecutar para obtener los empleados. Puede ser de 
+        dos tipos: Los empleados que trabajan en un proyecto (eliminar), o los empleados que no trabajan en un proyecto (anyadir).
+
+  Returns:
+      tuple: cuatro posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
+        - empleados (dict[int, str]):
+          Diccionario que contiene los empleados en su interior, el ID como
+          clave, y el nombre como valor. En caso de no existir empleados o 
+          de producirse un error, el diccionario es vacio.
+  """  
+  
+  # Local variables
+  retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 4 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion, conexion, 
+  # diccionario de empleados.
+  emp_dict:dict[int, str] = {} # Diccionario conteniendo los empleados del
+  # pertenecientes a un departamento del sistema. Clave: int (ID); Valor: str 
+  # (Nombre).
+  
+  # Local code
+  # Ejecutar la query
+  retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, query)
+
+  # Actualizar el valor de la conexion
+  conexion = retorno_otros[2]
+
+  if(retorno_otros[0] != 0): # No se pueden leer los departamentos en la base
+    # de datos
+    retorno = (-1, "\nError al leer los empleados en la base de datos. Cancelando modificacion de proyecto.", conexion, emp_dict)
+  
+  else: # Se han podido leer los empleados
+    # No hay empleados
+    if(len(retorno_otros) != 4): # No hay empleados
       retorno = (0, "\nNo hay empleados.", conexion, emp_dict)
     
     else: # Hay empleados
