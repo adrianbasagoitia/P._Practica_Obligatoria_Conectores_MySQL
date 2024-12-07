@@ -512,11 +512,9 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
     # en texto
   opcion:str # Opcion introducida por el usuario
   nuevo_campo:str # Nuevo campo para modificar el anterior
-  departamentos:dict[int, str] # Diccionario con los departamentos del sistema 
-    #ID: Nombre
   empleados:dict[int, str] # Diccionario con los empleados del sistema que 
     # pertenecen a un departamento en concreto ID: Nombre.
-
+  mensaje:str # Cadena de caracteres con un mensaje para imprimir al usuario
 
   # Local code
   # Buscar un proyecto
@@ -572,14 +570,14 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
           print("5 - Lista empleados.")
           print("0 - Salir.")
 
-          entrada = input(f"\nIntroduzca el numero de la opcion que desea realizar; [{intentos} restantes]: ")
+          opcion = input(f"\nIntroduzca el numero de la opcion que desea realizar; [{intentos} restantes]: ")
 
-          if(entrada == "0"): # Salir
+          if(opcion == "0"): # Salir
             valido = True # Opcion valida
             retorno = (0, "\nOperacion cancelada", conexion)
           
           # ##### CAMBIAR NOMBRE #####
-          elif(entrada == "1"): # Cambiar Nombre
+          elif(opcion == "1"): # Cambiar Nombre
             valido = True # Opcion valida
             retorno_otros = utilidades.pedir_campo(peticiones_campos(0)[2], "proyecto_nombre")
 
@@ -614,7 +612,7 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
           
           
           # ##### CAMBIAR DESCRIPCION #####
-          elif(entrada == "2"):
+          elif(opcion == "2"):
             valido = True
             retorno_otros = utilidades.pedir_campo(peticiones_campos(1)[2], "proyecto_descripcion")
 
@@ -649,7 +647,7 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
           
           
           # ##### CAMBIAR FECHA FIN #####
-          elif(entrada == "3"):
+          elif(opcion == "3"):
             valido = True
             retorno_otros = utilidades.pedir_campo(peticiones_campos(2)[2], "general_fecha")
 
@@ -690,48 +688,92 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
 
 
           # ##### CAMBIAR RESPONSABLE #####
-          elif(entrada == "4"):
+          elif(opcion == "4"):
             valido = True
             
             # Obtener los departamentos en un diccionario
-            retorno_otros = empleados_departamento_a_diccionario(conexion, parametros_conexion, )
+            retorno_otros = empleados_departamento_a_diccionario(conexion, parametros_conexion, proyecto[4])
 
             # Actualizar el valor de la conexion
             conexion = retorno_otros[2]
 
             if(retorno_otros[0] == -1): # Ejecucion erronea
-              retorno = (-1, "\nError al obtener los departamentos del sistema.", conexion)
+              retorno = (-1, "\nError al obtener los empleados que trabajan en el departamento.", conexion)
             
             else: # Ejecucion correcta
               # SIEMPRE, tiene que existor al menos el empleado asignado como 
               # respo nsable a este proyecto.
-              departamentos = retorno_otros[3]
+              empleados = retorno_otros[3]
 
-              # Obtener el id del empleado responsable actual
+              # Eliminar el empleado que es el responsable actual
+              del(empleados[proyecto[6]])
 
+              # Concatenar los empleados en una cadena de caracteres
+              mensaje = f"\nEmpleados del departamento {proyecto[5]}:\n"
+              for k in empleados.keys():
+                mensaje += f"\t{k} - {empleados[k]}\n"
+              
+              mensaje += "\nIntroduzca el identificador del empleado que quiera designar como responsable"
+              
+              # Pedir identificador al usuario
+              retorno_otros = utilidades.pedir_campo(mensaje, "general_numero")
 
-              # Borrar el departamento actual
+              # Peticion incorrecta
+              if(retorno_otros[0] != 0):
+                retorno = (-1, retorno_otros[1], conexion)
+              
+              else: # Peticion correcta
+                if(retorno_otros[2] == "-1"): # El usuario no cancela la 
+                  # operacion
+                  retorno = (-1, retorno_otros[1], conexion)
+                
+                else: # Campo valido
+                  nuevo_campo = int(retorno_otros[2]) # El casteo es seguro, ha 
+                    # sido validado por una expresion regular
+                  
+                  if(nuevo_campo not in empleados.keys()):
+                    retorno = (-1, "\nEl identificador del empleado es erroneo.", conexion)
+                  
+                  else: # La clave esta dentro del diccionario
+                    retorno_otros = utilidades.pedir_confirmacion(f"¿Quiere cambiar el responsable del proyecto de \"{proyecto[7]}\"  a \"{empleados[nuevo_campo]}\"?")
 
+                    if(retorno_otros == False): # No confirmada
+                      retorno = (-1, "\nOperacion no confirmada por el usuario.", conexion)
+                    
+                    else: # Operacion confirmada
+                      # Escribir la query
+                      retorno_otros = query.query_update("proyecto", [("proyecto", "responsable", f"{nuevo_campo}")], None, [("proyecto", "nombre", "=", f"\"{proyecto[0]}\"")])
 
+                      # Ejecutar la instruccion
+                      retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
 
+                      # Actualizar el valor de la conexion
+                      conexion = retorno_otros[2]
 
+                      if(retorno_otros[0] != 0): # Ejecucion erronea
+                        retorno = (-1, retorno_otros[1], conexion)
+                      
+                      else: # Ejecucion correcta
+                        # Borrar de ser necesario el empleado si estaba 
+                        # trabajando en el proyecto
+                        retorno_otros = query.query_delete_from("empleado_proyecto", [("proyecto", "nombre", "=", f"\"{proyecto[0]}\""), ("empleado_proyecto", "ID_EMPLEADO", "=", f"{nuevo_campo}")], [("left join", "proyecto", "id_proyecto", "id")])
 
+                        print(retorno_otros[2])
 
+                        # Ejecutar instruccion
+                        retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
 
+                        # Actualizar el valor de la conexion
+                        conexion = retorno_otros[2]
+                        
+                        if(retorno_otros[0] != 0): # El empleado no se ha borrado de la lista de empleados de estar presente
+                          retorno = (-1, "Empleado responsable modificado. El empleado no se ha borrado de la lista de empleados de estar presente"+retorno_otros[1])
+                        
+                        else: # Empleado borrado
+                          retorno = (0, f"\nResponsable del proyecto {proyecto[0]} cambiado de {proyecto[7]} a {empleados[nuevo_campo]}.", conexion)
 
-
-
-
-
-
-
-
-
-
-      
 
   return retorno
-
 
 
 # ######################################################################### #
