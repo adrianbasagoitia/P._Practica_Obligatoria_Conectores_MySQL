@@ -375,7 +375,7 @@ def crear_base_datos(conexion, nombre_base_datos:str, parametros:tuple):
     # La ejecucion siempre sera correcta
     retorno_otros = query.query_crear_tabla("empleado", True, 
       [("ID", "integer", False, False, True, None), 
-      ("nombre", "varchar(120)", False, True, False, None),
+      ("nombre", "varchar(120)", False, False, False, None),
       ("correo_electronico", "varchar(90)", False, True, False, None),
       ("cargo", "varchar(60)", True, False, False, "NULL"),
       ("fecha_contratacion", "date", False, False, False, None),
