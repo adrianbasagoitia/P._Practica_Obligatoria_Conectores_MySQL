@@ -105,8 +105,14 @@ def menu_proyecto(conexion, parametros_conexion:tuple):
     elif(entrada == "4"): # Modificar proyecto
       print("\n"*2+"+"*60)
       print("4 - Modificar proyecto.")
-      pass#modificar_proyecto(conexion, parametros_conexion)
-    
+      retorno_otros = modificar_proyecto(conexion, parametros_conexion)
+
+      # Imprimir siempre el mensaje
+      print(retorno_otros[1])
+
+      # Actualizar el valor de la conexion
+      conexion = retorno_otros[2]
+
 
     elif(entrada == "5"): # Mostrar proyectos
       print("\n"*2+"+"*60)
@@ -468,8 +474,210 @@ def buscar_proyecto(conexion, parametros_conexion:tuple):
       else: # Hay un proyecto con el nombre proporcionado. NO puede haber mas
         retorno = (0, "\nUn proyecto encontrado", conexion, retorno_otros[3][0])
     
-    return retorno
+  return retorno
+
+
+# ######################################################################### #
+def modificar_proyecto(conexion, parametros_conexion:tuple):
+  # Local variables
+  proyecto:tuple # Tupla conteniendo el proyecto obtenido de la base de datos.
+  intentos:int = 3 # Intentos para imprimir el proyecto a texto
+  valido:bool = False # Si el proyecto a sido pasado a una cadena de 
+    # caracteres. Si el usuario ha seleccionado una opcion correcta
+  pro_texto:str # Cadena de caracteres conteniendo la informacion del proyecto 
+    # en texto
+  opcion:str # Opcion introducida por el usuario
+  nuevo_campo:str # Nuevo campo para modificar el anterior
+
+  # Local code
+  # Buscar un proyecto
+  retorno_otros = buscar_proyecto(conexion, parametros_conexion)
+
+  # Actualizar el valor de la conexion
+  conexion = retorno_otros[2]
+
+  if(retorno_otros[0] == -1): # Ejecucion erronea
+    retorno = (-1, retorno_otros[1], conexion)
   
+  else: # Ejecucion correcta
+    if(len(retorno_otros) == 3): # No hay proyecto
+      retorno = (0, retorno_otros[1], conexion)
+  
+    else: # Hay un proyecto
+      # Imprimir mensaje de retorno
+      print(retorno_otros[1])
+
+      # Guardar proyecto en variable
+      proyecto = retorno_otros[3]
+      
+      # Imprimir el proyecto en texto
+      while(intentos > 0 and not valido):
+        retorno_otros = proyecto_a_texto(conexion, parametros_conexion, proyecto)
+
+        # Actualizar el valor de la conexion
+        conexion = retorno_otros[2]
+
+        if(retorno_otros[0] == -1): # Ejecucion erronea
+          intentos -= 1 # Reducir un intento
+        
+        else: # Ejecucion correcta
+          valido = True
+          pro_texto = retorno_otros[3]
+      
+      if(intentos == 0 and not valido):
+        retorno = (-1, "\nNo se ha podido obtener la informacion del proyecto. Cancelando modificacion.", conexion)
+      
+      else: # Se ha podido obtener el proyecto a texto
+        # Resetear el numero de intentos a 5
+        intentos = 5
+        valido = False
+        while(intentos > 0 and not valido):
+        # Imprimir el proyecto a texto
+          print(pro_texto)
+
+          print("Menu modificar")
+          print("1 - Nombre.")
+          print("2 - Descripcion.")
+          print("3 - Fecha Fin.")
+          print("4 - Departamento.")
+          print("5 - Responsable.")
+          print("6 - Lista empleados.")
+          print("0 - Salir.")
+
+          entrada = input(f"\nIntroduzca el numero de la opcion que desea realizar; [{intentos} restantes]: ")
+
+          if(entrada == "0"): # Salir
+            valido = True # Opcion valida
+            retorno = (0, "\nOperacion cancelada", conexion)
+          
+          # ##### CAMBIAR NOMBRE #####
+          elif(entrada == "1"): # Cambiar Nombre
+            valido = True # Opcion valida
+            retorno_otros = utilidades.pedir_campo(peticiones_campos(0)[2], "proyecto_nombre")
+
+            if(retorno_otros[0] != 0): # La peticion es erronea
+              retorno = (-1, retorno_otros[1], conexion)
+            
+            else: # La peticion es correcta
+              # Asignar el valor a una variable
+              nuevo_campo = retorno_otros[2]
+
+              # Pedir confirmacion para la operacion
+              retorno_otros = utilidades.pedir_confirmacion(f"¿Quiere cambiar el nombre del proyecto de {proyecto[0]} a {nuevo_campo}?")
+
+              if(retorno_otros is not True): # Operacion no confirmada
+                retorno = (-1, "\nOperacion no confirmada por el usuario.", conexion)
+              
+              else: # Operacion confirmada. Hacer el cambio
+                # Crear la query
+                retorno_otros = query.query_update("proyecto", [("proyecto", "nombre", f"\"{nuevo_campo}\"")], None, [("proyecto", "nombre", "=", f"\"{proyecto[0]}\"")])
+
+                # Ejecutar la query
+                retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+                # Actualziar el valor de la conexion
+                conexion = retorno_otros[2]
+
+                if(retorno_otros[0] != 0): # Ejecucion erronea
+                  retorno = (-1, retorno_otros[1], conexion)
+                
+                else:
+                  retorno = (0, f"\nNombre del proyecto cambiado de {proyecto[0]} a {nuevo_campo}.", conexion)
+          
+          
+          # ##### CAMBIAR DESCRIPCION #####
+          elif(entrada == "2"):
+            valido = True
+            retorno_otros = utilidades.pedir_campo(peticiones_campos(1)[2], "proyecto_descripcion")
+
+            if(retorno_otros[0] != 0): # La peticion es erronea
+              retorno = (-1, retorno_otros[1], conexion)
+            
+            else: # La peticion es correcta
+              # Asignar el valor a una variable
+              nuevo_campo = retorno_otros[2]
+
+              # Pedir confirmacion para la operacion
+              retorno_otros = utilidades.pedir_confirmacion(f"\n¿Quiere cambiar la descripcion del proyecto de \"{proyecto[1]}\" a \"{nuevo_campo}\"?")
+
+              if(retorno_otros is not True): # Operacion no confirmada
+                retorno = (-1, "\nOperacion no confirmada por el usuario", conexion)
+              
+              else: # Operacion confirmada. Hacer el cambio
+                # Crear la query
+                retorno_otros = query.query_update("proyecto", [("proyecto", "descripcion", f"\"{nuevo_campo}\"")], None, [("proyecto", "nombre", "=", f"\"{proyecto[0]}\"")])
+
+                # Ejecutar la query
+                retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+                # Actualziar el valor de la conexion
+                conexion = retorno_otros[2]
+
+                if(retorno_otros[0] != 0): # Ejecucion erronea
+                  retorno = (-1, retorno_otros[1], conexion)
+                
+                else:
+                  retorno = (0, f"\nDescripcion del proyecto cambiada de {proyecto[1]} a {nuevo_campo}.", conexion)
+          
+          
+          # ##### CAMBIAR FECHA FIN #####
+          elif(entrada == "3"):
+            valido = True
+            retorno_otros = utilidades.pedir_campo(peticiones_campos(2)[2], "general_fecha")
+
+            if(retorno_otros[0] != 0): # La peticion es erronea
+              retorno = (-1, retorno_otros[1], conexion)
+            
+            else: # La peticion es correcta
+              # Asignar el valor a una variable
+              # Es un str
+              nuevo_campo = datetime.datetime.strptime(retorno_otros[2], '%Y-%m-%d').date()
+              
+              # Comprobar que la fecha sea igual o mayor a la fecha de inicio
+              if(nuevo_campo < proyecto[2]):
+                retorno = (-1, f"\nLa fecha proporcionada es inferior a la fecha de inicio. {nuevo_campo.strftime("%d-%m-%Y")} < {proyecto[2].strftime("%d-%m-%Y")}", conexion)
+              
+              else: # La fecha es igual o mayor a la de inicio
+                # Pedir confirmacion para la operacion
+                retorno_otros = utilidades.pedir_confirmacion(f"\n¿Quiere cambiar la descripcion del proyecto de \"{proyecto[1]}\" a \"{nuevo_campo}\"?")
+
+                if(retorno_otros is not True): # Operacion no confirmada
+                  retorno = (-1, "\nOperacion no confirmada por el usuario", conexion)
+                
+                else: # Operacion confirmada. Hacer el cambio
+                  # Crear la query
+                  retorno_otros = query.query_update("proyecto", [("proyecto", "fecha_fin", f"\"{nuevo_campo}\"")], None, [("proyecto", "nombre", "=", f"\"{proyecto[0]}\"")])
+
+                  # Ejecutar la query
+                  retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+                  # Actualziar el valor de la conexion
+                  conexion = retorno_otros[2]
+
+                  if(retorno_otros[0] != 0): # Ejecucion erronea
+                    retorno = (-1, retorno_otros[1], conexion)
+                  
+                  else:
+                    retorno = (0, f"\nFecha de fin de proyecto cambiada de {proyecto[3].strftime("%d-%m-%Y")} a {nuevo_campo.strftime("%d-%m-%Y")}.", conexion)
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+
+  return retorno
+
+
 
 # ######################################################################### #
 def mostrar_proyecto(conexion, parametros_conexion:tuple):
