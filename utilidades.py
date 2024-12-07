@@ -40,10 +40,10 @@ def obtener_expresion_regular(clave:str):
   "empleado_salario": ["[0-9]{1,9}([.][0-9]?[0-9])?", 1134.00, 999999999.99],
 
   "departamento_nombre":        ["[A-Z0-9.,;&\\- ]{1,60}"],
-  "departamento_descripcion":   ["[A-Z0-9.,;&\\-_ ]{0,60}"],
+  "departamento_descripcion":   ["[A-Z0-9.,;&\\-_ ]{0,255}"],
 
   "proyecto_nombre":      ["[A-Z0-9.,;&\\- ]{1,60}"],
-  "proyecto_descripcion": ["[A-Z0-9.,;&\\-_ ]{0,60}"],
+  "proyecto_descripcion": ["[A-Z0-9.,;&\\-_ ]{0,255}"],
 
   "general_fecha": ["((0?[1-9])|([12][0-9])|(3[0-1]))-((1[0-2])|(0?[1-9]))-[0-9]{1,4}"],
   "general_numero": ["[0-9]{1,9}"]
@@ -243,7 +243,7 @@ def validar_campo(campo:str, nombre_campo:str):
         # Comprobar valores del campo
         if(campo_num >= caracteristicas[1] and campo_num <= caracteristicas[2]):
           # Campo correcto
-          retorno = (0, f"El {campo_t} \"{campo}\" es valido.", campo)
+          retorno = (0, f"El/La {campo_t} \"{campo}\" es valido/a.", campo)
 
         elif(campo_num < caracteristicas[1]): # Menor que valorMinimo
           retorno = (-1, f"\nEl {campo_t} tiene un valor menor al aceptado. {campo_num} < {caracteristicas[1]}.")
@@ -299,7 +299,7 @@ def pedir_confirmacion(mensaje:str):
 
 
 # ######################################################################### #
-def validar_fecha(campo:str, fecha_igual_superior:bool = True):
+def validar_fecha(campo:str, fecha_igual_superior:bool = False):
   """
   Valida una fecha introducida por el usuario.
 
