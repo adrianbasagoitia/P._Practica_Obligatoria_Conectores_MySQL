@@ -187,12 +187,14 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
         Query a ejecutar. Ej: CREATE DATABASE, SELECT, DELETE, INSERT INTO,...
 
   Returns:
-      tuple: dos o tres posiciones:
+      tuple: tres o cuatro posiciones:
         - codigo de resultado (int): 
           0 en caso de ejecucion correcta, -1 en cualquier otro caso.
         - mensaje de ejecucion (str): 
           Mensaje para el usuario informando del resultado de la ejecucion 
           del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
         - contenido devuelto por la query (tuple, optional): 
           Tupla conteniendo las lineas afectadas por la query. Opcional.
   """
@@ -249,6 +251,9 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
       # Ejecutar la query y obtener el numero de lineas afectadas
       num_filas = cursor.execute(query)
 
+      # Hacer commir sobre la conexion, aplicar cambios en el servidor
+      conn.commit()
+
       if(num_filas == 0): # No hay resultado delvuelto de la query
         mensaje = f"\nQuery ejecutada con exito."
       
@@ -265,16 +270,17 @@ def ejecutar_instruccion(conn, atributos:tuple, query:str):
   
 
   if("ERROR" in mensaje): # Ejecucion erronea
-    retorno = (-1, mensaje)
+    retorno = (-1, mensaje, conn)
   
   else: # Ejecucion valida.
     if(contenido_query is None): # No hay lineas afectadas
-      retorno = (0, mensaje)
+      retorno = (0, mensaje, conn)
     
     else: # Hay lineas afectadas
-      retorno = (0, mensaje, contenido_query)
+      retorno = (0, mensaje, conn, contenido_query)
   
   return retorno
+
 
 # ######################################################################### #
 def crear_base_datos(conexion, nombre_base_datos:str, parametros:tuple):
@@ -369,7 +375,7 @@ def crear_base_datos(conexion, nombre_base_datos:str, parametros:tuple):
     # La ejecucion siempre sera correcta
     retorno_otros = query.query_crear_tabla("empleado", True, 
       [("ID", "integer", False, False, True, None), 
-      ("nombre", "varchar(120)", False, True, False, None),
+      ("nombre", "varchar(120)", False, False, False, None),
       ("correo_electronico", "varchar(90)", False, True, False, None),
       ("cargo", "varchar(60)", True, False, False, "NULL"),
       ("fecha_contratacion", "date", False, False, False, None),
@@ -449,7 +455,7 @@ def crear_base_datos(conexion, nombre_base_datos:str, parametros:tuple):
   # departamento.
   if(continuar):
     # La ejecucion siempre sera correcta
-    retorno_otros = query.query_alter_table_add_fk("empleado", "empleado_fk_departamento", "departamento", "departamento", "id", "cascade", "cascade")
+    retorno_otros = query.query_alter_table_add_fk("empleado", "empleado_fk_departamento", "departamento", "departamento", "id", "cascade", "set null")
 
     # Ejecutar query
     retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])

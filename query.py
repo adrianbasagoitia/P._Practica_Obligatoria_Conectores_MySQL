@@ -648,7 +648,7 @@ def query_select(nombre_tabla:str, columnas:list[tuple] = None, join:list[tuple]
 
   Args:
       nombre_tabla (str): 
-        Nombre de la tabla donde se insertaran las nuevas filas.
+        Nombre de la tabla donde se buscaran las filas.
 
       columnas (list[tuple], optional): 
         Lista de tuplas, cada tupla es una columna de las tablas, que se
@@ -671,8 +671,11 @@ def query_select(nombre_tabla:str, columnas:list[tuple] = None, join:list[tuple]
           - Nombre de la tabla (str):
             Nombre de la tabla sobre la que hacer el join.
           
-          - Campo tabla original (str):
-            Campo de la tabla original por el cual hacer el join.
+          - Nombre de la tabla del campo situado a la izquierda (str):
+            Nombre de la tabla del campo situado a la izquierda
+
+          - Campo tabla situado a la izquierda (str):
+            Campo de la tabla de la izquierda por el cual hacer el join.
           
           - Campo tabla join (str):
             Campo de la tabla anyadida por el cual hacer el join.
@@ -757,18 +760,19 @@ def query_select(nombre_tabla:str, columnas:list[tuple] = None, join:list[tuple]
     # Tipo Join (Inner, Left, Right), Nombre Tabla | nombre_campo_tabla |
     # nombre_campo_tabla_join
     for i in range(0, len(join)):
-      query += f"\t\t{join[i][0].upper()} {join[i][1].upper()}\n\t\t\tON {nombre_tabla.upper()}.{join[i][2].upper()} = {join[i][1].upper()}.{join[i][3].upper()}\n"
+      query += f"\t\t{join[i][0].upper()} {join[i][1].upper()}\n\t\t\tON {join[i][2].upper()}.{join[i][3].upper()} = {join[i][1].upper()}.{join[i][4].upper()}\n"
       # Por cada join una linea. Tipo de Join nombre_tabla ON 
       # nombre_tabla_original.campo = nombre_tabla.campo
       # Ej INNER JOIN DEPARTAMENTO ON EMPLEADO.DEPARTAMENTO = DEPARTAMENTO.ID 
   
 
-    ##### Where #####
+  ##### Where #####
+  # Estructura de la tupla de un where
+  # nombre_tabla | nombre_campo | condicion (<, >, =) | valor |
+  if(where is not None):
     query += "\tWHERE\n" # Anyadir el where
-
-    # Estructura de la tupla de un where
-    # nombre_tabla | nombre_campo | condicion (<, >, =) | valor |
-    for i in range(0, len(where)): # Recorrer la lista de condiciones del where
+    for i in range(0, len(where)): # Recorrer la lista de condiciones del 
+      # where
       # Anyadir el where
       query += f"\t\t{where[i][0].upper()}.{where[i][1].upper()} {where[i][2].upper()} {where[i][3].upper()}"
 
@@ -778,27 +782,27 @@ def query_select(nombre_tabla:str, columnas:list[tuple] = None, join:list[tuple]
       else: # Si el la ultima linea, solo anyadir el salto de linea
         query += "\n"
     
-    # ##### Order By #####
-    # Estructura de una tupla de order by
-    # Nombre Tabla | Nombre columna | ASCendente o DESCendente
-    if(order_by is not None): # Si la query tiene que ordenarse de alguna manera
-      # Escribir Order By
-      query += "\tORDER BY\n"
-      for i in range(0, len(order_by)):
-        query += f"\t\t{order_by[i][0].upper()}.{order_by[i][1].upper()} {order_by[i][2].upper()}"
+  # ##### Order By #####
+  # Estructura de una tupla de order by
+  # Nombre Tabla | Nombre columna | ASCendente o DESCendente
+  if(order_by is not None): # Si la query tiene que ordenarse de alguna manera
+    # Escribir Order By
+    query += "\tORDER BY\n"
+    for i in range(0, len(order_by)):
+      query += f"\t\t{order_by[i][0].upper()}.{order_by[i][1].upper()} {order_by[i][2].upper()}"
 
-        if(i != len(order_by)-1): # Si no es la ultima columna por la que 
-          # ordenar, anyadir una coma
-          query += ","
+      if(i != len(order_by)-1): # Si no es la ultima columna por la que 
+        # ordenar, anyadir una coma
+        query += ","
 
-        # Siempre al final de cada linea de order by anyadir un salto de linea
-        query += "\n"
+      # Siempre al final de cada linea de order by anyadir un salto de linea
+      query += "\n"
+  
+  # ##### Limit #####
+  if(limit is not None):
+    query += f"\tLIMIT {limit}"
     
-    # ##### Limit #####
-    if(limit is not None):
-      query += f"\tLIMIT {limit}"
-    
-    # Al final de la query, siempre anyadir punto y coma
-    query += ";"
+  # Al final de la query, siempre anyadir punto y coma
+  query += ";"
 
   return (0, "Query para generar select escrita", query)

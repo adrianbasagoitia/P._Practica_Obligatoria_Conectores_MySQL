@@ -7,7 +7,7 @@ import fichero
 import utilidades
 #import empleado
 #import departamento
-#import proyecto
+import proyecto
 
 
 # ############################################################################ #
@@ -96,7 +96,14 @@ def iniciar_programa():
 
       if(retorno[0] == 0): # Parametros obtenidos
         parametros = retorno[2] # Asignar parametros a la variable
+      
+      else: # Fichero no encontrado
+        retorno = fichero.escribir_fichero(directorio_trabajo, nombre_fichero)
 
+        if(retorno[0] == 0): # Si la ejecucion es correcta
+          parametros = retorno[2]
+
+    if(parametros is not None):
         # ##### Instalacion de la libreria PyMySQL #####
         print("\nComprobando instalacion del conector PyMySQL...")
         conector_presente = comprobar_instalacion_pymyqsl()
@@ -144,6 +151,11 @@ def iniciar_programa():
 
               if(retorno[0] == 0): # Base de datos creada correctamente
                 llamar_menu = True
+        
+    else: # No hay parametros
+      print("\nERROR. No se han podido obtener parametros para realizar la ")
+      print("conexion a la base de datos.")
+      print("\nTerminando ejecucion del programa.")
   
 
   if(llamar_menu): # La inicializacion del programa ha sido correcta
@@ -197,7 +209,7 @@ def comprobar_sistema_operativo():
   
   else: # Cualquier otro sistema operativo
     retorno = (-1, "\nERROR. El programa no soporta la ejecucion en el sistema "+
-    f"operativo {sistema_operativo}.\n Terminando la ejecucion del programa.")
+    f"operativo {sistema_operativo}.\n Terminando ejecucion del programa.")
   
   return retorno
 
@@ -365,6 +377,9 @@ def obtener_parametros_conexion(directorio_trabajo:str, nombre_fichero:str):
     else: # Hay mas de una linea potencialmente valida
       retorno = (-1, "Numero de lineas potencialmente validas incorrecto.")
   
+  else:
+    retorno = (-1, retorno_otros[1])
+  
   return retorno
 
 
@@ -412,14 +427,15 @@ def menu(conexion, parametros_conexion:tuple):
         print("\nSalida cancelada.")
     
     elif(entrada == "1"): # Menu Empleado
-      empleado.menu_empleado(conexion, parametros_conexion)
-      
+      #empleado.menu_empleado(conexion, parametros_conexion)
+      pass
 
     elif(entrada == "2"): # Menu Departamento
-      departamento.menu_departameto(conexion, parametros_conexion)
-    
+      #departamento.menu_departameto(conexion, parametros_conexion)
+      pass
+
     elif(entrada == "3"): # Menu proyecto
-      proyecto.menu_proyecto(conexion, parametros_conexion)
+      conexion = proyecto.menu_proyecto(conexion, parametros_conexion)
     
     else: # Opcion erronea
       print(f"\nERROR. La opcion \"{entrada}\" no es una entrada valida.")
