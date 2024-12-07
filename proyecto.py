@@ -777,14 +777,159 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
           # ##### Anyadir empleados #####
           elif(opcion == "5"):
             valido = True
-            #retorno = anyadir_empleados(conexion, parametros_conexion)
-            pass
+            retorno = anyadir_empleados(conexion, parametros_conexion, proyecto)
+
 
           # ##### Eliminar empleados #####
           elif(opcion == "6"):
             valido = True
             retorno = eliminar_empleados(conexion, parametros_conexion, proyecto)
 
+  return retorno
+
+
+# ######################################################################### #
+def anyadir_empleados(conexion, parametros_conexion:tuple, proyecto:tuple):
+  """
+  Anyadir un empleado a un proyecto.
+
+  Dado un proyecto, buscar todos los empleados que no trabajan en el, y que 
+  no son el responsable.
+
+  Pedir al usuario que introduzca uno de los identificadores, y anyadirlo a la
+  lista de empleados del proyecto si se otorga confirmacion.
+
+  Args:
+      conn (Connection): 
+        Conexion sobre el servidor de la base de datos.
+
+      parametros_conexion (tuple):
+        Tupla con 4 posiciones: usuario, contrasenya, puerto, nombre base datos.
+
+      proyecto (tuple): 
+        Tupla conteniendo la informacion de un proyecto leida desde la base de 
+        datos: Nombre, Descripcion, Fecha_inicio, Fecha_fin, ID_departamento, 
+        nombre_departamento, ID_responsable, nombre responsable.
+
+
+  Returns:
+      tuple: tres posiciones:
+        - codigo de resultado (int): 
+          0 en caso de ejecucion correcta, -1 en cualquier otro caso.
+        - mensaje de ejecucion (str): 
+          Mensaje para el usuario informando del resultado de la ejecucion 
+          del metodo.
+        - conexion (Connection):
+          Conexion actual a la base de datos.
+  """  
+  # Local variables
+  retorno_otros:tuple = None # Retorno de ejecucion de otros metodos
+  retorno:tuple = None # Tupla conteniendo la informacion necesaria para el 
+  # retorno del metodo. 3 posiciones: Codigo ejecucion (0 - Correcta;
+  # -1 incorrecta), mensaje de resultado de ejecucion, conexion.
+  emp_dict:dict[int, str] # Diccionario conteniendo los empleados del
+  # pertenecientes a un proyecto del sistema. Clave: int (ID); Valor: str 
+  # (Nombre).
+  subconsulta_1:str # Subconsulta para obtener los empleados que trabajan en el 
+    # proyecto
+  subconsulta_2:str # Subconsulta para obtener el identificador del responsable
+    # del proyecto.
+  mensaje:str # Mensaje para imprimir al usuario
+  emp_id:int # Id del empleado introducido por el usuario
+  id_proyecto:int # Id del proyecto
+
+  # Local code
+  subconsulta_1 = query.query_select("proyecto", [("empleado_proyecto","id_empleado")], [("inner join", "empleado_proyecto", "proyecto", "id", "id_proyecto")], [("proyecto", "nombre", "=", f"\"{proyecto[0]}\"")])[2]
+
+  # Eliminar el punto y coma del final
+  subconsulta_1 = subconsulta_1[0:-1]
+
+  subconsulta_2 = query.query_select("proyecto", [("proyecto", "responsable")], None, [("proyecto", "nombre", "=", f"\"{proyecto[0]}\"")])[2]
+
+  # Eliminar el punto y coma del final
+  subconsulta_2 = subconsulta_2[0:-1]
+
+  retorno_otros = query.query_select("empleado", [("empleado", "id"), ("empleado", "nombre")], None, [("empleado", "id", "NOT IN", f"({subconsulta_1})"), ("empleado", "id", "NOT IN", f"({subconsulta_2})")])
+
+  # Diccionario con los empleados que no trabajam ni son responsables del 
+  # proyecto.
+  retorno_otros = empleados_a_diccionario(conexion, parametros_conexion, retorno_otros[2])
+
+  # Actualizar el valor de la conexion
+  conexion = retorno_otros[2]
+
+  if(retorno_otros[0] != 0): # Ejecucion erronea
+    retorno = (-1, retorno_otros[1], conexion)
+  
+  else: # Ejecucion correcta
+    # Diccionario de empleados a variable
+    emp_dict = retorno_otros[3]
+
+    if(emp_dict == {}): # No hay empleados disponibles
+      retorno = (0, "\nNo hay empleados disponibles para anyadir.", conexion)
+    
+    else: # Hay empleados
+      mensaje = f"Empleados que no trabajan ni son responsable de {proyecto[0]}:\n"
+
+      for k in emp_dict.keys():
+        mensaje += f"\t{k} - {emp_dict[k]}\n"
+      
+      mensaje += "Introduzca el indice del empleado a anyadir al proyecto"
+
+      retorno_otros = utilidades.pedir_campo(mensaje, "general_numero")
+
+      if(retorno_otros[0] != 0): # Peticion erronea
+        retorno = (-1, retorno_otros[1], conexion)
+      
+      else: # Peticion correcta
+        if(retorno_otros[2] == "-1"): # Operacion cancelada
+          retorno = (-1, "\nOperacion cancelada.", conexion)
+        
+        else: # Numero a validar
+          emp_id = int(retorno_otros[2]) # Casteo seguro, ha pasado por una 
+            # expresion regular
+          
+          if(emp_id not in emp_dict.keys()): # No es un identificador valido
+            retorno = (-1, f"\nEl identificador {emp_id} no es valido.", conexion)
+          
+          else: # El identificador es valido
+            # Pedir confirmacion de la accion
+            retorno_otros = utilidades.pedir_confirmacion(f"¿Quiere anyadir al empleado {emp_dict[emp_id]} al proyecto {proyecto[0]}?")
+
+            if(retorno_otros == False):
+              retorno = (-1, "\nOperacion cancelada.", conexion)
+            
+            else: # Operacion confirmada
+              # Obtener el id del proyecto
+              retorno_otros = query.query_select("proyecto", [("proyecto", "id")],None, [("proyecto", "nombre", "=", f"\"{proyecto[0]}\"")])
+
+              # Ejecutar la instruccion
+              retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+              # Actualizar el valor de la conexion
+              conexion = retorno_otros[2]
+
+              if(retorno_otros[0] != 0): # Ejecucion erronea
+                retorno = (-1, retorno_otros[1], conexion)
+              
+              else: # Ejecucion correcta. SIEMPRE existira UN unico resultado
+                id_proyecto = retorno_otros[3][0][0]
+
+                # Hacer la query
+                retorno_otros = query.query_insert_into("empleado_proyecto", ["id_empleado", "id_proyecto"], [(f"{emp_id}", f"{id_proyecto}")])
+
+                # Ejecutar la instruccion
+                retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+
+                # Actualizar el valor de la conexion
+                conexion = retorno_otros[2]
+
+                if(retorno_otros[0] != 0): # Ejecucion erronea
+                  retorno = (-1, retorno_otros[1], conexion)
+                
+                else: # Ejecucion correcta
+                  retorno = (-1, f"\nEmpleado {emp_dict[emp_id]} anyadido al proyecto {proyecto[0]}.", conexion)
+  
   return retorno
 
 
@@ -836,7 +981,7 @@ def eliminar_empleados(conexion, parametros_conexion:tuple, proyecto:tuple):
   # pertenecientes a un proyecto del sistema. Clave: int (ID); Valor: str 
   # (Nombre).
   emp_borrar:dict[int, str] = {} # Empleados a borrar del proyecto
-  mensaje:str # Mensjaje para imprimir al usuario
+  mensaje:str # Mensaje para imprimir al usuario
   continuar:bool = True # Indica si se deben seguir pidiendo empleados a 
     # eliminar del proyecto
   id_usuario:int # Identificador introducido por el usario
@@ -864,8 +1009,8 @@ def eliminar_empleados(conexion, parametros_conexion:tuple, proyecto:tuple):
       retorno = (0, "\nNo hay empleados que eliminar del proyecto.", conexion)
     
     else: # Hay empleados
-      while(continuar):
-        mensaje = f"Empleados del proyecto {proyecto[0]}:\n"
+      while(continuar and len(emp_dict.keys()) > 0):
+        mensaje = f"\nEmpleados del proyecto {proyecto[0]}:\n"
         for k in emp_dict.keys():
           mensaje += f"{k} - {emp_dict[k]}\n"
         
@@ -916,8 +1061,7 @@ def eliminar_empleados(conexion, parametros_conexion:tuple, proyecto:tuple):
         # Crear la query
         retorno_otros = query.query_delete_from("empleado_proyecto", [("proyecto", "nombre", "=", f"\"{proyecto[0]}\""), ("empleado_proyecto", "id_empleado", "IN", f"{mensaje}")], [("left join", "proyecto", "id_proyecto", "id")])
 
-        print(retorno_otros[2])
-
+        # Ejecutar la instruccion
         retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
 
         # Actualizar el valor de la conexion
