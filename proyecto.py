@@ -400,29 +400,33 @@ def baja_proyecto(conexion, parametros_conexion):
       # Actualizar el valor de la conexion
       conexion = proyecto_a_textoT[2]
 
-      # Imprimir el proyecto
-      print(proyecto_a_textoT[3])
-
-      # Pedir confirmacion
-      confirmado = utilidades.pedir_confirmacion("\n¿Quiere borrar el proyecto?")
-
-      if(not confirmado): # El usuario no quiere borrar el proyecto
-        retorno = (-1, "\nBorrado abortado.", conexion)
+      if(proyecto_a_textoT[0] != 0): # Proyecto a texto erroneo
+        retorno = (-1, proyecto_a_textoT[1], conexion)
       
-      else:
-        # Crear la query para borrar
-        retorno_otros = query.query_delete_from("proyecto", [("proyecto", "nombre", "=", f"\"{retorno_otros[3][0]}\"")])
+      else: # Ejecucion correcta
+        # Imprimir el proyecto
+        print(proyecto_a_textoT[3])
 
-        # Ejecutar la query sobre la base de datos
-        retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
-        # Actualizar el valor de la conexion
-        conexion = retorno_otros[2]
+        # Pedir confirmacion
+        confirmado = utilidades.pedir_confirmacion("\n¿Quiere borrar el proyecto?")
 
-        if(retorno_otros[0] == 0): # Borrado correcto
-          retorno = (0, "\nProyecto borrado de la base de datos", conexion)
+        if(not confirmado): # El usuario no quiere borrar el proyecto
+          retorno = (-1, "\nBorrado abortado.", conexion)
         
-        else: # Borrado erroneo
-          retorno = (-1, retorno_otros[1], conexion)
+        else:
+          # Crear la query para borrar
+          retorno_otros = query.query_delete_from("proyecto", [("proyecto", "nombre", "=", f"\"{retorno_otros[3][0]}\"")])
+
+          # Ejecutar la query sobre la base de datos
+          retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
+          # Actualizar el valor de la conexion
+          conexion = retorno_otros[2]
+
+          if(retorno_otros[0] == 0): # Borrado correcto
+            retorno = (0, "\nProyecto borrado de la base de datos", conexion)
+          
+          else: # Borrado erroneo
+            retorno = (-1, retorno_otros[1], conexion)
   
   return retorno
 
