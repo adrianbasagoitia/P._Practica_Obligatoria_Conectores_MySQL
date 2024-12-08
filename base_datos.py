@@ -455,7 +455,7 @@ def crear_base_datos(conexion, nombre_base_datos:str, parametros:tuple):
   # departamento.
   if(continuar):
     # La ejecucion siempre sera correcta
-    retorno_otros = query.query_alter_table_add_fk("empleado", "empleado_fk_departamento", "departamento", "departamento", "id", "cascade", "set null")
+    retorno_otros = query.query_alter_table_add_fk("empleado", "empleado_fk_departamento", "departamento", "departamento", "id", "set null", "cascade")
 
     # Ejecutar query
     retorno_otros = ejecutar_instruccion(conexion, parametros, retorno_otros[2])
