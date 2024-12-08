@@ -285,7 +285,7 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
       retorno_otros = utilidades.pedir_campo(mensaje, "general_numero")
 
       if(retorno_otros[0] == -1): # Peticion erronea
-        retorno = (-1, retorno_otros[1])
+        retorno = (-1, retorno_otros[1], conexion)
       
       else: # Peticion correcta
         dep_usu = int(retorno_otros[2]) # Casteo sin consecuencias, es un numero valido
@@ -316,7 +316,7 @@ def alta_proyecto(conexion, parametros_conexion:tuple):
             retorno_otros = utilidades.pedir_campo(mensaje, "general_numero")
 
             if(retorno_otros[0] == -1): # Peticion erronea
-              retorno = (-1, retorno_otros[1])
+              retorno = (-1, retorno_otros[1], conexion)
 
             else: # Peticion correcta
               emp_usu = int(retorno_otros[2]) # Casteo sin consecuencias, es un numero valido
@@ -759,7 +759,6 @@ def modificar_proyecto(conexion, parametros_conexion:tuple):
                         # trabajando en el proyecto
                         retorno_otros = query.query_delete_from("empleado_proyecto", [("proyecto", "nombre", "=", f"\"{proyecto[0]}\""), ("empleado_proyecto", "ID_EMPLEADO", "=", f"{nuevo_campo}")], [("left join", "proyecto", "id_proyecto", "id")])
 
-                        print(retorno_otros[2])
 
                         # Ejecutar instruccion
                         retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
