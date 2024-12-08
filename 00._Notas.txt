@@ -3,7 +3,7 @@ Se encuentran tres objetos a convertir en tablas: Empleado, Departamento y Proye
 
 EMPLEADO:
 ID                 INTEGER       NOT NULL    PRIMARY KEY     AUTO_INCREMENT
-NOMBRE             VARCHAR(120)  NOT NULL    UNIQUE
+NOMBRE             VARCHAR(120)  NOT NULL    
 CORREO_ELECTRONICO VARCHAR(90)   NOT NULL    UNIQUE
 CARGO              VARCHAR(60)   NULL
 FECHA_CONTRATACION DATE          NOT NULL
