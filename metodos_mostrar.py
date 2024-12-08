@@ -37,7 +37,7 @@ def departamento_a_texto(conexion, parametros_conexion:tuple,departamento:tuple)
   # Local code
   #Anyadimos a la cadena los campos
   pro_texto += f"\tNombre: {departamento[0]}\n"
-  pro_texto += f"\tCorreo: {departamento[1]}\n"
+  pro_texto += f"\tDescipcion: {departamento[1]}\n"
   if(departamento[2] is None or departamento[2] == ""): # El responsable es nulo 
     # vacia.
     pro_texto += f"\tResponsable: Sin Responsable.\n"
@@ -166,6 +166,7 @@ def empleado_a_texto(conexion, parametros_conexion:tuple,empleado:tuple):
     # tabla empleado_proyecto
   # Local code
   #Anyadimos a la cadena los campos
+  pro_texto += f"\tID: {empleado[6]}\n"
   pro_texto += f"\tNombre: {empleado[0]}\n"
   pro_texto += f"\tCorreo: {empleado[1]}\n"
   pro_texto += f"\tSalario: {empleado[2]}\n"

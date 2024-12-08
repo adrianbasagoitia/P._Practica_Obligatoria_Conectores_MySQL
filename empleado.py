@@ -237,6 +237,7 @@ def alta_empleado(conexion, parametros_conexion:tuple):
           # de la ejecucion de la instruccion
     repetir=utilidades.pedir_confirmacion("\nQuiere anyadir otro empleado?")
     indice=0
+    continuar = True
 
 # ######################################################################### #
 def borrar_empleado(conexion, parametros_conexion):
@@ -308,6 +309,9 @@ def borrar_empleado(conexion, parametros_conexion):
           
           else: # Borrado erroneo
             retorno = (-1, retorno_otros[1], conexion)
+      
+      else:
+        retorno = (-1, "\nOperacion cancelada.", conexion)
   
   return retorno
 # ######################################################################### #
@@ -372,7 +376,7 @@ def buscar_empleado(conexion, parametros_conexion:tuple):
       else: # Hay varios empleados con el nombre proporcionado.
         retorno = (0, "\nUn empleado encontrado", conexion, retorno_otros[3])
     
-    return retorno
+  return retorno
 # ######################################################################### #
 def modificar_empleado(conexion, parametros_conexion:tuple):
   """
@@ -484,12 +488,15 @@ def modificar_empleado(conexion, parametros_conexion:tuple):
                 retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
                 # Actualizar el valor de la conexion
                 conexion = retorno_otros[2]
+
+                if(retorno_otros[0] == -1):
+                  print(retorno_otros[1])
           elif(entrada == "3"): # salario
             # Pedir salario al usuario
             respuesta=utilidades.pedir_campo(peticiones_campos(2)[2],"empleado_salario")
             if(respuesta[0]!=-1):
               #Pedimos confirmación
-              modificar = utilidades.pedir_confirmacion("\n Esta seguro de modificar el empleado?")
+              confirmado = utilidades.pedir_confirmacion("\n Esta seguro de modificar el empleado?")
               if(not confirmado): # El usuario no quiere modificar el empleado
                 retorno = (-1, "\nBorrado abortado.", conexion)
               else:
@@ -505,7 +512,7 @@ def modificar_empleado(conexion, parametros_conexion:tuple):
             respuesta=utilidades.pedir_campo(peticiones_campos(3)[2],"empleado_cargo")
             if(respuesta[0]!=-1):
               #Pedimos confirmación
-              modificar = utilidades.pedir_confirmacion("\n Esta seguro de modificar el empleado?")
+              confirmado = utilidades.pedir_confirmacion("\n Esta seguro de modificar el empleado?")
               if(not confirmado): # El usuario no quiere modificar el empleado
                 retorno = (-1, "\nBorrado abortado.", conexion)
               else:
@@ -525,7 +532,7 @@ def modificar_empleado(conexion, parametros_conexion:tuple):
               respuesta=utilidades.pedir_campo(peticiones_campos(4)[2],"general_numero")
               if(respuesta[0]!=-1):
                 #Pedimos confirmación
-                modificar = utilidades.pedir_confirmacion("\n Esta seguro de modificar el empleado?")
+                confirmado = utilidades.pedir_confirmacion("\n Esta seguro de modificar el empleado?")
                 if(not confirmado): # El usuario no quiere modificar el empleado
                   retorno = (-1, "\nBorrado abortado.", conexion)
                 else:
@@ -536,6 +543,9 @@ def modificar_empleado(conexion, parametros_conexion:tuple):
                   retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
                   # Actualizar el valor de la conexion
                   conexion = retorno_otros[2]
+
+                  if(retorno_otros[0] == -1):
+                    print(retorno_otros[1])
             else:
               print(departamentos[1])
           if(retorno_otros[0] == 0): # Modificacion correcta

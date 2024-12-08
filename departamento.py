@@ -229,6 +229,7 @@ def alta_departamento(conexion, parametros_conexion:tuple):
           # de la ejecucion de la instruccion
     repetir=utilidades.pedir_confirmacion("\nQuiere anyadir otro departamento?")
     indice=0
+    continuar = True
 
 # ######################################################################### #
 def borrar_departamento(conexion, parametros_conexion):
@@ -355,12 +356,12 @@ def buscar_departamento(conexion, parametros_conexion:tuple):
     else: # Ejecucion correcta
       # Obtener el resultado y comprobar si hay empleados encontrados
       if(len(retorno_otros) != 4): # Si NO hay empleados
-        retorno = (0, "\nNo hay empleados con el nombre proporcionado.", conexion)
+        retorno = (0, "\nNo hay departamentos con el nombre proporcionado.", conexion)
       
       else: # Hay varios empleados con el nombre proporcionado.
-        retorno = (0, "\nUn empleado encontrado", conexion, retorno_otros[3])
+        retorno = (0, "\nUn departamento encontrado", conexion, retorno_otros[3])
     
-    return retorno
+  return retorno
 # ######################################################################### #
 def modificar_departamento(conexion, parametros_conexion:tuple):
   """
@@ -441,28 +442,31 @@ def modificar_departamento(conexion, parametros_conexion:tuple):
             respuesta=utilidades.pedir_campo(peticiones_campos(0)[2],"departamento_nombre")
             if(respuesta[0]!=-1):
               #Pedimos confirmación
-              modificar = utilidades.pedir_confirmacion("\n Esta seguro de modificar el departamento?")
+              confirmado = utilidades.pedir_confirmacion("\n Esta seguro de modificar el departamento?")
               if(not confirmado): # El usuario no quiere modificar el departamento
                 retorno = (-1, "\nBorrado abortado.", conexion)
               else:
                 # Crear la query para borrar
-                retorno_otros = query.query_update("empleado", [("departamento", "nombre", f"\"{respuesta[2]}\"")],None,[("departamento","nombre","=",f"\"{retorno_otros[2]}\"")])
+                retorno_otros = query.query_update("departamento", [("departamento", "nombre", f"\"{respuesta[2]}\"")],None,[("departamento","nombre","=",f"\"{retorno_otros[3][0][0]}\"")])
 
                 # Ejecutar la query sobre la base de datos
                 retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
                 # Actualizar el valor de la conexion
                 conexion = retorno_otros[2]
+
+                if(retorno_otros[0] == -1) :
+                  print(retorno_otros[1])
           elif(entrada == "2"): # descripcion
             # Pedir descripcion al usuario
             respuesta=utilidades.pedir_campo(peticiones_campos(1)[2],"departamento_descripcion")
             if(respuesta[0]!=-1):
               #Pedimos confirmación
-              modificar = utilidades.pedir_confirmacion("\n Esta seguro de modificar el departamento?")
+              confirmado = utilidades.pedir_confirmacion("\n Esta seguro de modificar el departamento?")
               if(not confirmado): # El usuario no quiere modificar el departamento
                 retorno = (-1, "\nBorrado abortado.", conexion)
               else:
                 # Crear la query para borrar
-                retorno_otros = query.query_update("empleado", [("departamento", "descripcion", f"\"{respuesta[2]}\"")],None,[("departamento","nombre","=",f"\"{retorno_otros[2]}\"")])
+                retorno_otros = query.query_update("departamento", [("departamento", "descripcion", f"\"{respuesta[2]}\"")],None,[("departamento","nombre","=",f"\"{retorno_otros[3][0][0]}\"")])
 
                 # Ejecutar la query sobre la base de datos
                 retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
@@ -470,28 +474,36 @@ def modificar_departamento(conexion, parametros_conexion:tuple):
                 conexion = retorno_otros[2]
           elif(entrada == "3"): # responsable
             # Pedir responsable al usuario
-             # Obtener la query para seleccionar todos los empleados
-            queryT = query.query_select("empleado", [("empleado", "nombre"), ("empleado", "correo_electronico"), ("empleado", "salario"), ("empleado", "fecha_contratacion"), ("departamento", "nombre"), ("empleado", "cargo"),("empleado", "id")],[("inner join", "departamento", "empleado", "departamento", "id")],[("departamento", "nombre", "=", f"\"{retorno_otros[2]}\"")])
+            subconsulta = query.query_select("departamento", [("departamento", "id")], None, [("departamento", "nombre", "=", f"\"{retorno_otros[3][0][0]}\"")])
+            # Eliminar el punto y coma
+            subconsulta = subconsulta[2][0:-1]
+
+            # Obtener la query para seleccionar todos los empleados
+            queryT = query.query_select("empleado", [("empleado", "nombre"), ("empleado", "correo_electronico"), ("empleado", "salario"), ("empleado", "fecha_contratacion"), ("departamento", "nombre"), ("empleado", "cargo"),("empleado", "id")],[("inner join", "departamento", "empleado", "departamento", "id")],[("departamento", "nombre", "=", f"\"{retorno_otros[3][0][0]}\""), ("empleado", "id", "NOT IN", f"({subconsulta})")])
             # Ejecutar la query sobre la base de datos
             empleados=base_datos.ejecutar_instruccion(conexion, parametros_conexion, queryT[2])
             if(empleados[0]==0 and len(empleados)==4):
               empleados_lista=empleados[3]
               for i in empleados_lista:
-                em_txt+=metodos_mostrar.empleado_a_texto(conexion, parametros_conexion,i)
+                em_txt+=metodos_mostrar.empleado_a_texto(conexion, parametros_conexion,i)+"\n"
+              print(em_txt)
               respuesta=utilidades.pedir_campo(peticiones_campos(2)[2],"general_numero")
               if(respuesta[0]!=-1):
                 #Pedimos confirmación
-                modificar = utilidades.pedir_confirmacion("\n Esta seguro de modificar el departamento?")
+                confirmado = utilidades.pedir_confirmacion("\n Esta seguro de modificar el departamento?")
                 if(not confirmado): # El usuario no quiere modificar el departamento
                   retorno = (-1, "\nBorrado abortado.", conexion)
                 else:
                   # Crear la query para borrar
-                  retorno_otros = query.query_update("empleado", [("departamento", "responsable", f"\"{respuesta[2]}\"")],None,[("departamento","nombre","=",f"\"{retorno_otros[2]}\"")])
+                  retorno_otros = query.query_update("departamento", [("departamento", "responsable", f"\"{respuesta[2]}\"")],None,[("departamento","nombre","=",f"\"{retorno_otros[3][0][0]}\"")])
 
                   # Ejecutar la query sobre la base de datos
                   retorno_otros = base_datos.ejecutar_instruccion(conexion, parametros_conexion, retorno_otros[2])
                   # Actualizar el valor de la conexion
                   conexion = retorno_otros[2]
+
+                  if(retorno_otros[0] != 0):
+                    print(retorno_otros[1])
             else:
               print(empleados[1])
           if(retorno_otros[0] == 0): # Modificacion correcta

@@ -5,8 +5,8 @@ import os
 import base_datos
 import fichero
 import utilidades
-#import empleado
-#import departamento
+import empleado
+import departamento
 import proyecto
 
 
@@ -427,11 +427,11 @@ def menu(conexion, parametros_conexion:tuple):
         print("\nSalida cancelada.")
     
     elif(entrada == "1"): # Menu Empleado
-      #empleado.menu_empleado(conexion, parametros_conexion)
+      empleado.menu_empleado(conexion, parametros_conexion)
       pass
 
     elif(entrada == "2"): # Menu Departamento
-      #departamento.menu_departameto(conexion, parametros_conexion)
+      departamento.menu_departamento(conexion, parametros_conexion)
       pass
 
     elif(entrada == "3"): # Menu proyecto
